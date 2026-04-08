@@ -1,7 +1,7 @@
 import {  ForbiddenException, Injectable, NotFoundException,UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Account,STATUS } from './entity/account.entity';
+import { Account,ACCOUNT_TYPE,ACCOUNT_STATUS } from './entity/account.entity';
 import { User } from 'src/user/entity/user.entity';
 // import { AuthService } from '../auth/auth.service';
 import { UserService } from 'src/user/user.service';
@@ -32,8 +32,9 @@ export class AccountService {
             accountNumber:accNumber,
             currency:currency,
             balance: balance,
+            account_type:ACCOUNT_TYPE.USER,
             user:user,
-            status:STATUS.ACTIVE,
+            status:ACCOUNT_STATUS.ACTIVE,
             createdAt: new Date()
 
         })

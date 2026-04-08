@@ -1,13 +1,19 @@
 import { User } from "src/user/entity/user.entity";
 import { Entity,PrimaryGeneratedColumn,Column, ManyToOne,CreateDateColumn } from "typeorm";
 
-export enum STATUS {
+export enum ACCOUNT_STATUS {
 
     ACTIVE = "active",
     INACTIVE = 'Inactive',
     SUSPENDED = 'Suspended',
     CLOSE  = 'Closed',
     PENDING = 'Pending',
+}
+
+export enum ACCOUNT_TYPE {
+
+    DUMMY = "dummy",
+    USER = "user"
 }
 
 @Entity("Account")
@@ -19,6 +25,13 @@ export class Account {
     @Column( { type:'integer',  default: 12345678 } )
         accountNumber:number;
 
+    @Column( { 
+        type:'enum', 
+        enum: ACCOUNT_TYPE,
+        default: ACCOUNT_TYPE.DUMMY,
+        } )
+        account_type:ACCOUNT_TYPE
+
     @Column( 'decimal', { default:0 } )
         balance:number;
 
@@ -27,10 +40,10 @@ export class Account {
 
     @Column({
         type:'enum',
-        enum:STATUS,
-        default:STATUS.PENDING,
+        enum:ACCOUNT_STATUS,
+        default:ACCOUNT_STATUS.PENDING,
     })
-        status:STATUS;
+        status:ACCOUNT_STATUS;
     
     
 

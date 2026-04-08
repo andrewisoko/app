@@ -8,6 +8,14 @@ export enum SPLIT_AGREEMENT{
    
 }
 
+export enum CONTRACT_STATUS{
+
+        ACCEPTED = 'accepted',
+        DECLINED = 'declined',
+        FAILED = 'failed',
+        PENDING = 'pending'
+}
+
 @Entity("Contract")
 export class Contract {
 
@@ -29,6 +37,13 @@ export class Contract {
                 default:SPLIT_AGREEMENT.AMOUNT
         })
                 split_agreement: SPLIT_AGREEMENT;
+        
+        @Column({
+                type:'enum',
+                enum:CONTRACT_STATUS,
+                default:CONTRACT_STATUS.PENDING
+        })
+                contract_status:CONTRACT_STATUS
         
         @Column( { nullable:true } )
                 location_agreement:string;
