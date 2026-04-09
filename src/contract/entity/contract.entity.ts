@@ -27,24 +27,24 @@ export class Contract {
 
         @Column( 'varchar',{ length:15, default:'John '} )
                 sender:string;
-
-        @Column('varchar',{ length:15, default:'Paul '} )
-                 receiver:string;;
-
+  
         @Column({
                 type:'enum',
                 enum:SPLIT_AGREEMENT,
                 default:SPLIT_AGREEMENT.AMOUNT
         })
                 split_agreement: SPLIT_AGREEMENT;
-        
+                
         @Column({
                 type:'enum',
                 enum:CONTRACT_STATUS,
                 default:CONTRACT_STATUS.PENDING
         })
                 contract_status:CONTRACT_STATUS
-        
+                
+        @Column({nullable:true})
+                        receiver:string;
+
         @Column( { nullable:true } )
                 location_agreement:string;
 

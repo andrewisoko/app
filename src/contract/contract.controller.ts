@@ -1,4 +1,29 @@
-import { Controller } from '@nestjs/common';
+import { Controller,Post,Body } from '@nestjs/common';
+import { ContractService } from './contract.service';
+import { SPLIT_AGREEMENT } from './entity/contract.entity';
+import { Transaction } from 'src/transaction/entity/transaction.entity';
+import { CONTRACT_STATUS } from './entity/contract.entity';
 
 @Controller('contract')
-export class ContractController {}
+    export class ContractController {
+
+    constructor( private readonly contractService:ContractService){}
+
+        @Post('send-contract')
+            sendContract(
+                @Body() contractDto: {  /* name/ surname number and email data is provided by agreed consent of sharing sensitive data of user device /*
+
+                    sender: string,
+                    receiver: string,
+                    split_agreement: SPLIT_AGREEMENT,
+                    transaction:Transaction, /* to change */
+                    contractStatus:CONTRACT_STATUS,
+                    repayment_agreement?:string,
+                    event_agreement?:string,
+                    location_agreement?:string,
+                    time_agreement?:string
+            }
+            ){
+                return this.contractService.sendContract(contractDto,)
+            }
+}

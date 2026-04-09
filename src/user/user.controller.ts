@@ -1,6 +1,6 @@
 import { Controller,Get,Param,Delete,Request,Post,Body } from '@nestjs/common';
 import { UserService } from './user.service';
-import { User } from './entity/user.entity';
+import { User, UserType } from './entity/user.entity';
 import { UnauthorizedException } from '@nestjs/common';
 import { Role } from './entity/user.entity';
 import { Roles } from 'src/roles/roles.decorator';
@@ -28,14 +28,15 @@ export class UserController {
          async createUser(
             @Body() registerDto:RegisterDto
             ){
-                const randomFour = Math.floor(Math.random() * 100000) 
-                const userName = registerDto.name.slice(0,3) + registerDto.surname + randomFour.toString
-                const hashedpassword = await bcrypt.hash(registerDto.password,10)
+                const randomFour = Math.floor(Math.random() * 100000 ) 
+                const userName = registerDto.name.slice( 0,3 ) + registerDto.surname + randomFour.toString
+                const hashedpassword = await bcrypt.hash( registerDto.password,10 )
                 return this.userService.createUser({
                     role:Role.USER,
                     name:registerDto.name,
                     surname:registerDto.surname,
                     userName:userName,
+                    userType:UserType.COMPETED,
                     email:registerDto.email,
                     password:hashedpassword,
                     confirmPassword:hashedpassword

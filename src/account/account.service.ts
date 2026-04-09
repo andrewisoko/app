@@ -1,7 +1,7 @@
 import {  ForbiddenException, Injectable, NotFoundException,UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Account,ACCOUNT_TYPE,ACCOUNT_STATUS } from './entity/account.entity';
+import { Account,ACCOUNT_STATUS } from './entity/account.entity';
 import { User } from 'src/user/entity/user.entity';
 // import { AuthService } from '../auth/auth.service';
 import { UserService } from 'src/user/user.service';
@@ -20,7 +20,7 @@ export class AccountService {
 
     async createAccount(currency:string,balance:number,username:string):Promise<Account>{ 
 
-        const user = await this.userRepository.findOneBy({ userName: username });
+        const user = await this.userRepository.findOneBy({ user_name: username });
 
         if(!user) throw new NotFoundException("user not found")
 
@@ -32,7 +32,6 @@ export class AccountService {
             accountNumber:accNumber,
             currency:currency,
             balance: balance,
-            account_type:ACCOUNT_TYPE.USER,
             user:user,
             status:ACCOUNT_STATUS.ACTIVE,
             createdAt: new Date()
@@ -66,11 +65,11 @@ export class AccountService {
         ): Promise<any> {
 
         const user = await this.userRepository.findOne({
-            where: { userName: userNameClient }
+            where: { user_name: userNameClient }
         });
         if (!user) throw new NotFoundException('User not found');
 
-        const userName = user.userName
+        const userName = user.user_name
  
 
         const account = await this.accountRepository.findOne({
@@ -95,7 +94,7 @@ async deleteAccount(accountId:string, password:string, username:string){
     if (!account) throw new NotFoundException("account not found");
 
     
-    if (account.user.userName !== username) throw new UnauthorizedException("You do not own this account");
+    if (account.user.user_name !== username) throw new UnauthorizedException("You do not own this account");
     if(account.balance > 0) throw new UnauthorizedException("Balance must be zero for account to be deleted.");
     if (account.status === "Pending") throw new UnauthorizedException("Account still pending.");
     
@@ -116,8 +115,8 @@ async deleteAccount(accountId:string, password:string, username:string){
     return this.accountRepository.delete(account)
     
     
-}
+    };
     
-    }
+};
 
 

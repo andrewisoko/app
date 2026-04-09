@@ -10,11 +10,6 @@ export enum ACCOUNT_STATUS {
     PENDING = 'Pending',
 }
 
-export enum ACCOUNT_TYPE {
-
-    DUMMY = "dummy",
-    USER = "user"
-}
 
 @Entity("Account")
 export class Account {
@@ -25,12 +20,6 @@ export class Account {
     @Column( { type:'integer',  default: 12345678 } )
         accountNumber:number;
 
-    @Column( { 
-        type:'enum', 
-        enum: ACCOUNT_TYPE,
-        default: ACCOUNT_TYPE.DUMMY,
-        } )
-        account_type:ACCOUNT_TYPE
 
     @Column( 'decimal', { default:0 } )
         balance:number;

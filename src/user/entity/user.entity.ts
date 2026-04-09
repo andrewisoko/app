@@ -1,5 +1,7 @@
-import { Entity,PrimaryGeneratedColumn, Column, OneToMany } from "typeorm";
+import { Entity,PrimaryGeneratedColumn, Column, OneToMany,JoinColumn } from "typeorm";
 import { Account } from "src/account/entity/account.entity";
+import { OneToOne } from "typeorm/browser";
+import { Inbox } from "src/inbox/entity/inbox.entity";
 
 
 export enum Role {
@@ -7,6 +9,10 @@ export enum Role {
     ADMIN = "admin",
 }
 
+export enum UserType {
+    DEFAULT = "default",
+    COMPETED = "completed",
+}
 @Entity("User")
 export class User {
 
@@ -20,15 +26,21 @@ export class User {
         })
         role:Role
 
+    @Column({
+        type:'enum',
+        enum:UserType,
+        default:UserType.DEFAULT
+    })
+        user_type: UserType
 
-    @Column( 'varchar', { length:10 , default: 'John James' })
+    @Column( 'varchar', { length:10 , default: 'John' })
         name:string;
 
-    @Column( 'varchar', { length:10 , default: 'John James' })
+    @Column( 'varchar', { length:10 , default: 'James' })
         surname:string;
 
-    @Column( 'varchar', { length:12 ,default: 'JoJames' } )
-        userName:string;
+    @Column( 'varchar', { length:12 ,default: 'JoJames2345' } )
+        user_name:string;
 
     @Column('varchar', { length:30 , default: 'JohnJames100@email.com' })
         email:string;
@@ -38,4 +50,8 @@ export class User {
     
     @OneToMany( ()=>Account,accounts => accounts.user )
         accounts:Account[]
+
+    @OneToOne( ()=> Inbox,inbox => inbox.user )
+        @JoinColumn()
+        inbox: Inbox
 }

@@ -1,5 +1,5 @@
 import { IsString, IsNotEmpty,IsNumber, IsOptional} from "class-validator";
-import { Role } from "../entity/user.entity";
+import { Role, UserType } from "../entity/user.entity";
 
 
 export class RegisterDto{
@@ -16,6 +16,10 @@ export class RegisterDto{
     @IsString()
     @IsNotEmpty()
     userName:string; 
+
+    @IsString()
+    @IsNotEmpty()
+    userType:UserType; 
     
     
     @IsString()

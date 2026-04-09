@@ -6,6 +6,7 @@ import { Transaction } from 'src/transaction/entity/transaction.entity';
 import { Contract } from './entity/contract.entity';
 import { User } from 'src/user/entity/user.entity';
 import { Account } from 'src/account/entity/account.entity';
+import { UserService } from 'src/user/user.service';
 
 @Module({
   imports:[
@@ -17,6 +18,9 @@ import { Account } from 'src/account/entity/account.entity';
     ])
   ],
   controllers: [ContractController],
-  providers: [ContractService]
+  providers: [
+    ContractService,
+    UserService,
+  ]
 })
 export class ContractModule {}
