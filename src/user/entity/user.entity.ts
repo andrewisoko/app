@@ -1,6 +1,6 @@
 import { Entity,PrimaryGeneratedColumn, Column, OneToMany,JoinColumn } from "typeorm";
 import { Account } from "src/account/entity/account.entity";
-import { OneToOne } from "typeorm/browser";
+import { OneToOne } from "typeorm";
 import { Inbox } from "src/inbox/entity/inbox.entity";
 
 

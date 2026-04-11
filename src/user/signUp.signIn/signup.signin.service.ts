@@ -35,7 +35,7 @@ export class SignUpSignInService {
 
          const payload = { 
              sub : user.id,
-            username:user.userName,
+            username:user.user_name,
             email: user.email,
             role: user.role,
         }

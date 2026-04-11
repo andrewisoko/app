@@ -12,6 +12,7 @@ import { Account } from 'src/account/entity/account.entity';
 import { VirtualCard } from 'src/virtual_card/entity/virtual.card.entity';
 import { Contract } from 'src/contract/entity/contract.entity';
 import { Transaction } from 'src/transaction/entity/transaction.entity';
+import { Inbox } from 'src/inbox/entity/inbox.entity';
 
 @Module({
   imports: [
@@ -42,7 +43,8 @@ import { Transaction } from 'src/transaction/entity/transaction.entity';
           Account,
           VirtualCard,
           Transaction,
-          Contract
+          Contract,
+          Inbox
         ]
         }
       }

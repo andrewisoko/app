@@ -7,6 +7,8 @@ import { Contract } from './entity/contract.entity';
 import { User } from 'src/user/entity/user.entity';
 import { Account } from 'src/account/entity/account.entity';
 import { UserService } from 'src/user/user.service';
+import { InboxService } from 'src/inbox/inbox.service';
+import { Inbox } from 'src/inbox/entity/inbox.entity';
 
 @Module({
   imports:[
@@ -14,13 +16,15 @@ import { UserService } from 'src/user/user.service';
       Transaction,
       Contract,
       User,
-      Account
+      Account,
+      Inbox
     ])
   ],
   controllers: [ContractController],
   providers: [
     ContractService,
     UserService,
+    InboxService
   ]
 })
 export class ContractModule {}

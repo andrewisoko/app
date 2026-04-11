@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException,UnauthorizedException } from '@nestjs/common';
 import { User } from './entity/user.entity';
 import { InjectRepository} from '@nestjs/typeorm';
-import {Repository} from 'typeorm'
+import { Repository } from 'typeorm';
 import { RegisterDto } from './signUp.signIn/registerDto';
 
 @Injectable()
@@ -10,21 +10,21 @@ export class UserService {
     }
 
 
-    findUserById(id:string){
-        return this.userRepository.findOneBy({id})
+    async findUserById(id:string){
+        return await this.userRepository.findOneBy({id})
     }
-    findUserByEmail(email:string){
-        return this.userRepository.findOneBy({email})
+     async findUserByEmail(email:string){
+        return await this.userRepository.findOneBy({email})
     }
 
-    createUser(data:Partial<RegisterDto>){
+     async createUser(data:Partial<RegisterDto>){
         const user = this.userRepository.create(data)
-        return this.userRepository.save(user)
+        return await this.userRepository.save(user)
     }
 
 
-    deleteUser(id:string){
-        return this.userRepository.delete(id)
+     async deleteUser(id:string){
+        return await this.userRepository.delete(id)
     }
 }
 

@@ -3,6 +3,7 @@ import { UserController } from './user.controller';
 import { UserService } from './user.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './entity/user.entity';
+import { Inbox } from '../inbox/entity/inbox.entity';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { ConfigService } from '@nestjs/config';
@@ -11,7 +12,7 @@ import { SignUpSignInService } from './signUp.signIn/signup.signin.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User]),
+    TypeOrmModule.forFeature([User, Inbox]),
     PassportModule,
     JwtModule.registerAsync({
       useFactory: (configService: ConfigService) => ({

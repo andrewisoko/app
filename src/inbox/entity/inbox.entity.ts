@@ -19,7 +19,6 @@ export class Inbox {
         history: Contract[];
 
         @OneToOne(() => User, user => user.inbox )
-        @JoinColumn()
         user: User;
 
 }

@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CARDTYPE, VirtualCard } from './entity/virtual.card.entity';
+import { JwtService } from '@nestjs/jwt';
 
 
 
@@ -9,7 +10,10 @@ import { CARDTYPE, VirtualCard } from './entity/virtual.card.entity';
 
 @Injectable()
 export class VirtualCardService {
-    constructor( @InjectRepository(VirtualCard) private readonly vcRepository:Repository<VirtualCard>){}
+    constructor( 
+        @InjectRepository(VirtualCard) private readonly vcRepository:Repository<VirtualCard>,
+        private readonly jwtService:JwtService,
+){}
 
     createExpiryDate(){
 
@@ -68,5 +72,11 @@ export class VirtualCardService {
 
     }
 
+    cardQRCode(pan:string,expiry:string){
+
+        const token = this.jwtService.sign({
+            pan:pan,expiry:expiry
+        })
+    }
     
 }

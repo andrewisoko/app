@@ -21,4 +21,19 @@ export class VirtualCardController {
         ){
             return this.virtualCardService.createTempCard(dataDto.fullName,dataDto.expiryTime)
         }
+
+    @Post('create-expiry-date')
+        createExpiryDate(){
+            return this.virtualCardService.createExpiryDate()
+        }
+
+    @Post('generate-qr-code')
+        generateQRCode(
+            @Body() dataDto:{
+                pan:string,
+                expiry:string
+            }
+        ){
+            return this.virtualCardService.cardQRCode(dataDto.pan, dataDto.expiry)
+        }
 }
