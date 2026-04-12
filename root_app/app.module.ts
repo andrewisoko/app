@@ -7,8 +7,8 @@ import { UserModule } from '../src/user/user.module';
 import { AccountModule } from '../src/account/account.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { MongooseModule } from '@nestjs/mongoose';
 import { User } from 'src/user/entity/user.entity';
-import { Account } from 'src/account/entity/account.entity';
 import { VirtualCard } from 'src/virtual_card/entity/virtual.card.entity';
 import { Contract } from 'src/contract/entity/contract.entity';
 import { Transaction } from 'src/transaction/entity/transaction.entity';
@@ -25,13 +25,12 @@ import { Inbox } from 'src/inbox/entity/inbox.entity';
         VirtualCardModule,
         UserModule,
         ContractModule,
-        AccountModule,
       ],
       inject:[ConfigService],
       useFactory:(configService:ConfigService) => {
 
         return {
-          type: 'postgres',
+        type: 'postgres',
         host: configService.get<string>('DB_HOST'),
         port: parseInt(configService.get<string>('DB_PORT') ?? '5432', 10),
         username: configService.get<string>('DB_USER'),
@@ -40,7 +39,6 @@ import { Inbox } from 'src/inbox/entity/inbox.entity';
         synchronize:true,
         entities:[
           User,
-          Account,
           VirtualCard,
           Transaction,
           Contract,
@@ -48,7 +46,16 @@ import { Inbox } from 'src/inbox/entity/inbox.entity';
         ]
         }
       }
-    })
+    }),
+    MongooseModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => {
+        return {
+          uri: configService.get<string>('MONGODB_URI') 
+        };
+      },
+    }),
+    AccountModule,
     
     ],
   controllers: [AppController],

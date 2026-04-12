@@ -1,6 +1,5 @@
-import { Entity,PrimaryGeneratedColumn, Column, OneToMany,JoinColumn } from "typeorm";
-import { Account } from "src/account/entity/account.entity";
-import { OneToOne } from "typeorm";
+import { Entity,PrimaryGeneratedColumn, Column, OneToOne,JoinColumn } from "typeorm";
+import { OneToOne as TypeORMOneToOne } from "typeorm";
 import { Inbox } from "src/inbox/entity/inbox.entity";
 
 
@@ -51,9 +50,6 @@ export class User {
     @Column( 'varchar', { default: 'Passwordxmx0'} )
         password:string;  
     
-    @OneToMany( ()=>Account,accounts => accounts.user )
-        accounts:Account[]
-
     @OneToOne( ()=> Inbox,inbox => inbox.user )
         @JoinColumn()
         inbox: Inbox

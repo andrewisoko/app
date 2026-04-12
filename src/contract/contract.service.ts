@@ -4,7 +4,7 @@ import { Contract, SPLIT_AGREEMENT, CONTRACT_STATUS } from './entity/contract.en
 import { Repository } from 'typeorm';
 import { Transaction } from 'src/transaction/entity/transaction.entity';
 import { Role, User } from 'src/user/entity/user.entity';
-import { Account } from 'src/account/entity/account.entity';
+import { Account } from 'src/account/document/account.doc';
 import { UserService } from 'src/user/user.service';
 import { RegisterDto } from 'src/user/signUp.signIn/registerDto';
 import { UserType } from 'src/user/entity/user.entity';
