@@ -10,7 +10,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { MongooseModule } from '@nestjs/mongoose';
 import { User } from 'src/user/entity/user.entity';
 import { VirtualCard } from 'src/virtual_card/entity/virtual.card.entity';
-import { Contract } from 'src/contract/document/contract.doc';
+import { Contract } from 'src/contract/entity/contract.entity';
 import { Transaction } from 'src/transaction/entity/transaction.entity';
 import { Inbox } from 'src/inbox/entity/inbox.entity';
 
@@ -39,6 +39,7 @@ import { Inbox } from 'src/inbox/entity/inbox.entity';
         entities:[
           User,
           VirtualCard,
+          Contract,
           Transaction,
           Inbox
         ]
@@ -49,7 +50,8 @@ import { Inbox } from 'src/inbox/entity/inbox.entity';
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
         return {
-          uri: configService.get<string>('MONGODB_URI') 
+          uri: configService.get<string>('MONGODB_URI'),
+          dbName: 'bank',
         };
       },
     }),

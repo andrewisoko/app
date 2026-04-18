@@ -1,7 +1,8 @@
 import { User } from "src/user/entity/user.entity";
+import { Contract } from "src/contract/entity/contract.entity";
 import { Entity, PrimaryGeneratedColumn, OneToOne, JoinColumn, CreateDateColumn, Column } from "typeorm";
 
-@Entity("Inbox")
+@Entity("inbox")
 export class Inbox {
 
         @PrimaryGeneratedColumn('uuid')
@@ -18,5 +19,9 @@ export class Inbox {
 
         @OneToOne(() => User, user => user.inbox )
         user: User;
+
+        @OneToOne(() => Contract, contract => contract.inbox)
+        @JoinColumn({ name: 'contract_id' })
+        contract: Contract;
 
 }

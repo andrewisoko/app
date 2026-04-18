@@ -9,7 +9,7 @@ export enum ACCOUNT_STATUS {
     PENDING = 'Pending',
 }
 
-@Schema({ timestamps: true })
+@Schema({ timestamps: true, collection: 'account' })
 export class Account extends Document {
 
 

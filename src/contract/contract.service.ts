@@ -1,10 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
-import { Contract, ContractDocument, SPLIT_AGREEMENT, CONTRACT_STATUS } from './document/contract.doc';
+import { Contract, SPLIT_AGREEMENT, CONTRACT_STATUS } from './entity/contract.entity';
 import { Transaction } from 'src/transaction/entity/transaction.entity';
 import { Role, User } from 'src/user/entity/user.entity';
-import { Account } from 'src/account/document/account.doc';
 import { UserService } from 'src/user/user.service';
 import { RegisterDto } from 'src/user/signUp.signIn/registerDto';
 import { UserType } from 'src/user/entity/user.entity';
@@ -34,7 +31,7 @@ export interface contractProps{
 export class ContractService {
 
     constructor( 
-        @InjectModel('Contract') private readonly contractModel: Model<ContractDocument>,
+        @InjectRepository( Contract ) private readonly contractRepository: Repository<Contract>,
         @InjectRepository( User ) private readonly userRepository:Repository<User>,
         private readonly userService: UserService,
         private readonly inboxService: InboxService,
@@ -44,26 +41,25 @@ export class ContractService {
 
     async sendContract( contract:contractProps, registerDto:Partial<RegisterDto> ){
 
-        const contractPayload = {
-            
+        const contractPayload = this.contractRepository.create({
             sender: contract.sender,
             sender_percentage:contract.sender_percentage,
             sender_amount:contract.sender_amount,
             receiver: contract.receiver,
+            time_agreement: contract.time_agreement,
             receiver_percentage:contract.receiver_percentage,
             receiver_amount:contract.receiver_amount,
-            split_agreement: contract.split_agreement,
-            contract_status: contract.contractStatus,
+            split_agreement: contract.split_agreement as SPLIT_AGREEMENT,
+            contract_status: contract.contractStatus as CONTRACT_STATUS,
             repayment_agreement: contract.repayment_agreement,
             event_agreement: contract.event_agreement,
-            time_agreement: contract.time_agreement,
             location_agreement: contract.location_agreement,
-        };
+        });
         
-        const contractCreated = await this.contractModel.create(contractPayload);
+        const contractCreated = await this.contractRepository.save(contractPayload);
 
         // Handle multiple receivers
-        for (const receiverName of contractPayload.receiver) {
+        for (const receiverName of contractCreated.receiver) {
             const receiverUser = await this.userRepository.findOne( { where: { user_name: receiverName }})
             if ( ! receiverUser ){
                 const randomFour = Math.floor(Math.random() * 100000) 

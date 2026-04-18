@@ -2,16 +2,17 @@ import { Module } from '@nestjs/common';
 import { TransactionService } from './transaction.service';
 import { TransactionController } from './transaction.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { MongooseModule } from '@nestjs/mongoose';
 import { User } from 'src/user/entity/user.entity';
-import { Contract, ContractSchema } from 'src/contract/document/contract.doc';
+import { Contract } from 'src/contract/entity/contract.entity';
+import { Transaction } from './entity/transaction.entity';
 
 @Module({
   imports:[
       TypeOrmModule.forFeature([
-        User
+        Contract,
+        User,
+        Transaction,
       ]),
-      MongooseModule.forFeature([{ name: 'Contract', schema: ContractSchema }]),
     ],
   providers: [TransactionService],
   controllers: [TransactionController]

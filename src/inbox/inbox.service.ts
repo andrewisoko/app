@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Inbox } from './entity/inbox.entity';
 import { User } from 'src/user/entity/user.entity';
-import { Contract } from 'src/contract/document/contract.doc';
+import { Contract } from 'src/contract/entity/contract.entity';
 
 @Injectable()
 export class InboxService {
@@ -17,8 +17,9 @@ export class InboxService {
     async postInbox(contract:Contract,user:User){
 
         return await this.inboxRepository.save({
-            history:[contract._id.toString()],
-            mostRecent:contract._id.toString(),
+            history:[contract.id],
+            mostRecent:contract.id,
+            contract:contract,
             user:user,
         })
         
