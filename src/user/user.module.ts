@@ -9,10 +9,15 @@ import { PassportModule } from '@nestjs/passport';
 import { ConfigService } from '@nestjs/config';
 import { JwtStrategy } from '../jwt/jwt.strategy';
 import { SignUpSignInService } from './signUp.signIn/signup.signin.service';
+import { MongooseModule } from '@nestjs/mongoose';
+import { AccountSchema } from 'src/account/document/account.doc';
+import { AccountModule } from 'src/account/account.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([User, Inbox]),
+    MongooseModule.forFeature([{ name: 'Account', schema: AccountSchema }]),
+    AccountModule,
     PassportModule,
     JwtModule.registerAsync({
       useFactory: (configService: ConfigService) => ({
@@ -24,6 +29,6 @@ import { SignUpSignInService } from './signUp.signIn/signup.signin.service';
   ],
   controllers: [UserController],
   providers: [UserService, JwtStrategy, SignUpSignInService],
-  exports: [JwtStrategy, SignUpSignInService],
+  exports: [JwtStrategy, SignUpSignInService, UserService],
 })
 export class UserModule {}

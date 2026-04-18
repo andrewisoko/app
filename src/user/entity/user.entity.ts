@@ -48,7 +48,7 @@ export class User {
         email:string;
 
     @Column('varchar',{length:50, default:["550e8400-e29c-41d4-a715-446655440000"]})
-        account:string[];
+        accounts:string[];
 
     @Column( 'varchar', { default: 'Passwordxmx0'} )
         password:string;  

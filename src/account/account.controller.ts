@@ -17,7 +17,7 @@ export class AccountController {
     @Roles(Role.ADMIN,Role.USER) 
     @Post('create')
     createAccount(
-        @Body() createAccountDto:{ currency:string; initialDeposit:number, username?:string; },
+        @Body() createAccountDto:{ currency:string; initialDeposit:number, fullName:string, username?:string; },
         @Request() req
     ){
         const {username} = req.user
@@ -27,13 +27,16 @@ export class AccountController {
             return this.accountService.createAccount(
                 createAccountDto.currency,
                 createAccountDto.initialDeposit,
+                createAccountDto.fullName,
                 createAccountDto.username,
             )
 
         };
         return this.accountService.createAccount(
+            
         createAccountDto.currency,
         createAccountDto.initialDeposit,
+        createAccountDto.fullName,
         username
      )    
     }

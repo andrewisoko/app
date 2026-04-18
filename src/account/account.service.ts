@@ -3,7 +3,6 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Account, AccountDocument, ACCOUNT_STATUS } from './document/account.doc';
 import { User } from 'src/user/entity/user.entity';
-import { UserService } from 'src/user/user.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
@@ -13,8 +12,6 @@ export class AccountService {
     constructor(
         @InjectModel('Account') private accountModel: Model<AccountDocument>,
                 @InjectRepository(User) private userRepository:Repository<User>,
-
-                private userService:UserService
     ){}
 
 
@@ -34,7 +31,7 @@ export class AccountService {
     }
 
 
-    async createAccount(currency:string,balance:number,username:string):Promise<Account>{ 
+    async createAccount(currency:string,balance:number,username:string ,fullName:string ):Promise<Account>{ 
 
         const user = await this.userRepository.findOneBy({ user_name: username });
 
@@ -43,7 +40,7 @@ export class AccountService {
         const accNumber = Math.floor(Math.random() * 1000000000 ) /* to check */
         const pan = Math.floor(Math.random() * 10000000000000000 ).toString()
          const expiryDate = this.createExpiryDate()
-        console.log(accNumber)
+     
         
         const newAccount = await this.accountModel.create({
 
@@ -51,6 +48,7 @@ export class AccountService {
             currency:currency,
             ledger_balance: balance,
             available_balance:balance,
+            fullName:fullName,
             hold:0,
             pan:pan,
             expiry:expiryDate,
@@ -59,11 +57,13 @@ export class AccountService {
             createdAt: new Date()
         });
 
-        return newAccount.save();
+        newAccount.save();
+        
+        return newAccount
     }
 
     async findAllAccounts(email: string): Promise<AccountDocument[]> {
-        const validUser = await this.userService.findUserByEmail(email);
+        const validUser = await this.userRepository.findOne({ where: { email } });
         if (!validUser) {
             throw new UnauthorizedException('Invalid email');
         }
@@ -103,7 +103,7 @@ export class AccountService {
         const account = await this.accountModel.findById(accountId).exec();
         if (!account) throw new NotFoundException("account not found");
 
-        const user = await this.userService.findUserByUsername(username);
+        const user = await this.userRepository.findOne({ where: { user_name: username } });
         if (!user || account.customer.toString() !== user.id) {
             throw new UnauthorizedException("You do not own this account");
         }

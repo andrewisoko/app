@@ -5,9 +5,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Transaction } from 'src/transaction/entity/transaction.entity';
 import { Contract } from './entity/contract.entity';
 import { User } from 'src/user/entity/user.entity';
-import { UserService } from 'src/user/user.service';
-import { InboxService } from 'src/inbox/inbox.service';
 import { Inbox } from 'src/inbox/entity/inbox.entity';
+import { UserModule } from 'src/user/user.module';
+import { InboxModule } from 'src/inbox/inbox.module';
 
 @Module({
   imports:[
@@ -16,13 +16,13 @@ import { Inbox } from 'src/inbox/entity/inbox.entity';
       Transaction,
       User,
       Inbox
-    ])
+    ]),
+    UserModule,
+    InboxModule,
   ],
   controllers: [ContractController],
   providers: [
     ContractService,
-    UserService,
-    InboxService
   ]
 })
 export class ContractModule {}

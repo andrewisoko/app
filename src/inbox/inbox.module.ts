@@ -15,6 +15,7 @@ import { Contract } from 'src/contract/entity/contract.entity';
     ]),
   ],
   controllers: [InboxController],
-  providers: [InboxService]
+  providers: [InboxService],
+  exports: [InboxService],
 })
 export class InboxModule {}
