@@ -1,6 +1,5 @@
-import { Contract } from "src/contract/entity/contract.entity";
 import { User } from "src/user/entity/user.entity";
-import { Entity, PrimaryGeneratedColumn, OneToOne, OneToMany, JoinColumn, CreateDateColumn } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, OneToOne, JoinColumn, CreateDateColumn, Column } from "typeorm";
 
 @Entity("Inbox")
 export class Inbox {
@@ -11,12 +10,11 @@ export class Inbox {
         @CreateDateColumn({ name: 'timestamp' })
         createdAt: Date;
 
-        @OneToOne(() => Contract, { nullable: true })
-        @JoinColumn()
-        mostRecent: Contract;
+        @Column({ nullable: true, type: 'text' })
+        mostRecent: string;
 
-        @OneToMany(() => Contract, (contract) => contract.id )
-        history: Contract[];
+        @Column({ nullable: true, type: 'simple-array' })
+        history: string[];
 
         @OneToOne(() => User, user => user.inbox )
         user: User;

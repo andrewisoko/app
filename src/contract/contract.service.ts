@@ -18,9 +18,9 @@ export interface contractProps{
 
     sender: string,
     receiver: string[],
-    split_agreement: SPLIT_AGREEMENT,
-    transactions?: Types.ObjectId[] | string[],
-    contractStatus:CONTRACT_STATUS,
+    split_agreement: string,
+    contractStatus: string,
+    time_agreement:Date[]
     sender_percentage?: number;
     sender_amount?: number;
     receiver_percentage?: number[];
@@ -28,7 +28,6 @@ export interface contractProps{
     repayment_agreement?:string,
     event_agreement?:string,
     location_agreement?:string,
-    time_agreement?:string
 
 } 
 @Injectable()
@@ -54,7 +53,6 @@ export class ContractService {
             receiver_percentage:contract.receiver_percentage,
             receiver_amount:contract.receiver_amount,
             split_agreement: contract.split_agreement,
-            transactions: contract.transactions,
             contract_status: contract.contractStatus,
             repayment_agreement: contract.repayment_agreement,
             event_agreement: contract.event_agreement,

@@ -15,25 +15,14 @@ export enum CONTRACT_STATUS {
 
 @Schema({ timestamps: true })
 export class Contract extends Document {
+
     @Prop({ type: String, required: true })
         sender: string;
 
     @Prop({ type: [String], required: true })
         receiver: string[];
-
-    @Prop({ type: Number, required:false, default: 50 })
-        sender_percentage: number;
-
-    @Prop({ type: [Number], required:false, default: 50 })
-        receiver_percentage: number[];
-
-    @Prop({ type:Number, required:false, defaul: 5 })
-        sender_amount: number;
-
-    @Prop({ type:[Number], required:false, default: 5 })
-        receiver_amount: number[] 
-
-    @Prop({
+    
+     @Prop({
         type: String,
         enum: SPLIT_AGREEMENT,
         default: SPLIT_AGREEMENT.AMOUNT,
@@ -45,6 +34,22 @@ export class Contract extends Document {
         default: CONTRACT_STATUS.PENDING,
     })
         contract_status: CONTRACT_STATUS;
+    
+    @Prop({ type: [Date], default:['2026-04-18T12:00:00Z', '2026-04-18T15:00:00Z'] })
+        time_agreement: [Date, Date];
+
+    @Prop({ type: Number, required:false, default: 50 })
+        sender_percentage: number;
+
+    @Prop({ type: [Number], required:false, default: 50 })
+        receiver_percentage: number[];
+
+    @Prop({ type:Number, required:false, default: 0 })
+        sender_amount: number;
+
+    @Prop({ type:[Number], required:false, default: 0 })
+        receiver_amount: number[] 
+
 
     @Prop({ type: String , required:false })
         repayment_agreement: string;
@@ -55,8 +60,6 @@ export class Contract extends Document {
     @Prop({ type: String, required:false })
         location_agreement: string;
 
-    @Prop({ type: String, required:false })
-        time_agreement: string;
 
     @Prop({ type: [Types.ObjectId], ref: 'Transaction', default: [] })
         transactions: Types.ObjectId[];
