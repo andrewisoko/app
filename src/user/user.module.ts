@@ -12,10 +12,13 @@ import { SignUpSignInService } from './signUp.signIn/signup.signin.service';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AccountSchema } from 'src/account/document/account.doc';
 import { AccountModule } from 'src/account/account.module';
+import { VirtualCard } from 'src/virtual_card/entity/virtual.card.entity';
+import { VirtualCardService } from 'src/virtual_card/virtual.card.service';
+
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, Inbox]),
+    TypeOrmModule.forFeature([User, Inbox,VirtualCard]),
     MongooseModule.forFeature([{ name: 'Account', schema: AccountSchema }]),
     AccountModule,
     PassportModule,
@@ -28,7 +31,7 @@ import { AccountModule } from 'src/account/account.module';
     }),
   ],
   controllers: [UserController],
-  providers: [UserService, JwtStrategy, SignUpSignInService],
+  providers: [UserService, JwtStrategy, SignUpSignInService,VirtualCardService],
   exports: [JwtStrategy, SignUpSignInService, UserService],
 })
 export class UserModule {}

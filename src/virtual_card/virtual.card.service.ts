@@ -32,7 +32,7 @@ export class VirtualCardService {
 
     async createMainCard(
         fullName:string,
-        id:string
+        id:any
     ){
         const pan = Math.floor(Math.random() * 10000000000000000 ).toString()
         const CVC = Math.floor(Math.random() * 1000 ).toString()

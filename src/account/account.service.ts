@@ -5,13 +5,18 @@ import { Account, AccountDocument, ACCOUNT_STATUS } from './document/account.doc
 import { User } from 'src/user/entity/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { Types } from 'mongoose';
+import { VirtualCardService } from 'src/virtual_card/virtual.card.service';
+import { VirtualCard } from 'src/virtual_card/entity/virtual.card.entity';
 
 
 @Injectable()
 export class AccountService {
     constructor(
         @InjectModel('Account') private accountModel: Model<AccountDocument>,
-                @InjectRepository(User) private userRepository:Repository<User>,
+        @InjectRepository(User) private userRepository:Repository<User>,
+        @InjectRepository(VirtualCard) private virtualCardRepository:Repository<VirtualCard>,
+        private readonly virtualCardService:VirtualCardService,
     ){}
 
 
@@ -56,6 +61,14 @@ export class AccountService {
             status: ACCOUNT_STATUS.ACTIVE,
             createdAt: new Date()
         });
+
+        const userVirtualCard = await this.virtualCardService.createMainCard(
+            fullName,
+            newAccount._id
+        );
+
+        const savedVirstualCard = await this.virtualCardRepository.save(userVirtualCard);
+        newAccount.mainVirtualCard.push(new Types.ObjectId(savedVirstualCard.id));
 
         newAccount.save();
         

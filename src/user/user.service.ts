@@ -4,18 +4,22 @@ import { InjectRepository} from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { RegisterDto } from './signUp.signIn/registerDto';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Account, AccountDocument } from 'src/account/document/account.doc';
 import { Inbox } from 'src/inbox/entity/inbox.entity';
 import { AccountService } from 'src/account/account.service';
+import { VirtualCardService } from 'src/virtual_card/virtual.card.service';
+import { VirtualCard } from 'src/virtual_card/entity/virtual.card.entity';
 
 @Injectable()
 export class UserService {
     constructor(
         @InjectRepository(User) private userRepository: Repository<User>,
         @InjectRepository(Inbox) private inboxRepository: Repository<Inbox>,
+        @InjectRepository(VirtualCard) private virtualCardRepository: Repository<VirtualCard>,
         @InjectModel('Account') private accountModel: Model<AccountDocument>,
-        private readonly accountService:AccountService
+        private readonly accountService:AccountService,
+        private readonly virtualCardService:VirtualCardService
     ){}
 
 
@@ -30,21 +34,24 @@ export class UserService {
     }
 
      async createUser(data:Partial<RegisterDto>){
+
         const user = this.userRepository.create(data);
         const savedUser = await this.userRepository.save(user);
         const userName = savedUser.user_name;
-        const fullName = `${savedUser.name} ${savedUser.surname}`
-        const newAccount = await this.accountService.createAccount(
+        const fullName = `${savedUser.name} ${savedUser.surname}`;
+        const userAccount = await this.accountService.createAccount(
             'GBP',
             200,
             userName,
             fullName
             );
-
-        savedUser.accounts = [newAccount._id.toString()];
-
+            
         const inbox = this.inboxRepository.create({ user: savedUser });
+        savedUser.accounts = [userAccount._id.toString()];
+        userAccount.save();
+
         const savedInbox = await this.inboxRepository.save(inbox);
+
 
         savedUser.inbox = savedInbox;
         return await this.userRepository.save(savedUser)
