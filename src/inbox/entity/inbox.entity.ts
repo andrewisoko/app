@@ -11,11 +11,11 @@ export class Inbox {
         @CreateDateColumn({ name: 'timestamp' })
         createdAt: Date;
 
-        @Column({ nullable: true, type: 'text' })
-        mostRecent: string;
+        @Column({ nullable: true, type: 'simple-json' })
+        mostRecent: Partial<Contract>[];
 
-        @Column({ nullable: true, type: 'simple-array' })
-        history: string[];
+        @Column({ nullable: true, type: 'simple-json' })
+        history: Partial<Contract>[];
 
         @OneToOne(() => User, user => user.inbox )
         user: User;
