@@ -28,12 +28,17 @@ export class UserController {
          async createUser(
             @Body() registerDto:RegisterDto
             ){
-                const randomFour = Math.floor(Math.random() * 100000 ) 
-                const hashedpassword = await bcrypt.hash( registerDto.password,10 )
+                
+                const hashedpassword = await bcrypt.hash( registerDto.password,10 );
+                const randomFour = Math.floor(Math.random() * 100000 );
+                const userName = registerDto.name.slice( 0,3 ) + registerDto.surname + randomFour.toString();
+
+               
                 return this.userService.createUser({
                     role:Role.USER,
                     name:registerDto.name,
                     surname:registerDto.surname,
+                    userName:userName,
                     mobileNumber:registerDto.mobileNumber,
                     userType:UserType.COMPETED,
                     email:registerDto.email,

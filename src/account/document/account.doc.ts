@@ -44,11 +44,11 @@ export class Account extends Document {
     })
         status: ACCOUNT_STATUS;
 
-     @Prop({ type: [Types.ObjectId], ref: 'VirtualCard', default: [] })
-        mainVirtualCard: Types.ObjectId[];
+      @Prop({ type: [String], default: [] })
+          mainVirtualCard: string[];
 
-     @Prop({ type: [Types.ObjectId], ref: 'VirtualCard', required:false })
-        tempVirtualCard: Types.ObjectId[];
+      @Prop({ type: [String], required:false, default: [] })
+          tempVirtualCard: string[];
         
     @Prop({ type: [Types.ObjectId], ref: 'Transaction', default: [] })
         transactions: Types.ObjectId[];

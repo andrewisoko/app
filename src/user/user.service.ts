@@ -33,22 +33,22 @@ export class UserService {
         return await this.userRepository.findOneBy({email})
     }
 
-     async createUser(data:Partial<RegisterDto>){
+    async createUser(data:Partial<RegisterDto>){
 
         const user = this.userRepository.create(data);
         const savedUser = await this.userRepository.save(user);
-        const userName = savedUser.user_name;
         const fullName = `${savedUser.name} ${savedUser.surname}`;
+
         const userAccount = await this.accountService.createAccount(
             'GBP',
             200,
-            userName,
+            savedUser.user_name,
             fullName
             );
-            
+        
+
         const inbox = this.inboxRepository.create({ user: savedUser });
         savedUser.accounts = [userAccount._id.toString()];
-        userAccount.save();
 
         const savedInbox = await this.inboxRepository.save(inbox);
 
@@ -58,7 +58,7 @@ export class UserService {
     }
 
 
-     async deleteUser(id:string){
+    async deleteUser(id:string){
         return await this.userRepository.delete(id)
     }
 }

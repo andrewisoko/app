@@ -14,11 +14,11 @@ export class RegisterDto{
     surname:string; 
 
     @IsString()
-    @IsNotEmpty()
+    @IsOptional()
     userName:string; 
 
     @IsString()
-    @IsNotEmpty()
+    @IsOptional()
     userType:UserType; 
     
     @IsString()

@@ -21,12 +21,12 @@ export class VirtualCardService {
 
     async account(id:string){
 
-        const account = await this.accountModel.findOne({id:id}).exec()
-        if ( ! account ) throw new NotFoundException('account date not found')
+        const account = await this.accountModel.findById(id).exec()
+        if ( ! account ) throw new NotFoundException('{virtual card} account not found')
         
         return { 
-            'expDate': account.expiry,
-            'pan': account.pan
+            expDate: account.expiry,
+            pan: account.pan,
         }
     }
 
@@ -37,7 +37,7 @@ export class VirtualCardService {
         const pan = Math.floor(Math.random() * 10000000000000000 ).toString()
         const CVC = Math.floor(Math.random() * 1000 ).toString()
         const account = await this.account(id)
-        const expiryDate = account['expDate']
+        const expiryDate = account.expDate
        
       
       
@@ -62,8 +62,8 @@ export class VirtualCardService {
 
         const CVC = Math.floor(Math.random() * 1000 ).toString();
         const account = await this.account(id);
-        const expiryDate = account['expiryDate'];
-        const pan = account['pan'];
+        const expiryDate = account.expDate;
+        const pan = account.pan;
 
             return this.vcRepository.create({
 

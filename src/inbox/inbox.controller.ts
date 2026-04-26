@@ -2,6 +2,7 @@ import { Body, Controller, Post } from '@nestjs/common';
 import { InboxService } from './inbox.service';
 import { Contract } from 'src/contract/entity/contract.entity';
 import { User } from 'src/user/entity/user.entity';
+import { ReceivedContractDto } from './document/received.contract.dto';
 
 @Controller('inbox')
 export class InboxController {
@@ -19,7 +20,7 @@ export class InboxController {
 
     @Post('receiver-inbox-contract')
         receivedContractOnInbox(
-            @Body() dataDto:{ contractId: string, receiverUsername: string, accepted:boolean }
+            @Body() dataDto: ReceivedContractDto
         ){
             return this.inboxService.ContractReceivedOnInbox(
                 dataDto.contractId,

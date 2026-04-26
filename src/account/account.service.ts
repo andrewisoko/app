@@ -5,7 +5,6 @@ import { Account, AccountDocument, ACCOUNT_STATUS } from './document/account.doc
 import { User } from 'src/user/entity/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Types } from 'mongoose';
 import { VirtualCardService } from 'src/virtual_card/virtual.card.service';
 import { VirtualCard } from 'src/virtual_card/entity/virtual.card.entity';
 
@@ -23,14 +22,11 @@ export class AccountService {
        createExpiryDate(){
 
           const expiryDateMonth = () => { 
-            const num =  Math.floor(Math.random() * 12 ).toString()
-            if( num.length < 2){
-                return '0'+ num
-            }
-            return num
+            const num = Math.floor(Math.random() * 12) + 1;
+            return num.toString().padStart(2, '0');
         }
         const expiryDateYear = '36' 
-        const expiryDate = expiryDateMonth + '/' + expiryDateYear
+        const expiryDate = expiryDateMonth() + '/' + expiryDateYear
 
         return expiryDate
     }
@@ -40,7 +36,7 @@ export class AccountService {
 
         const user = await this.userRepository.findOneBy({ user_name: username });
 
-        if(!user) throw new NotFoundException("user not found")
+        if(!user) throw new NotFoundException("create account:user not found")
 
         const accNumber = Math.floor(Math.random() * 1000000000 ) /* to check */
         const pan = Math.floor(Math.random() * 10000000000000000 ).toString()
@@ -62,17 +58,16 @@ export class AccountService {
             createdAt: new Date()
         });
 
+
         const userVirtualCard = await this.virtualCardService.createMainCard(
             fullName,
             newAccount._id
         );
 
         const savedVirstualCard = await this.virtualCardRepository.save(userVirtualCard);
-        newAccount.mainVirtualCard.push(new Types.ObjectId(savedVirstualCard.id));
+        newAccount.mainVirtualCard.push(savedVirstualCard.id);
 
-        newAccount.save();
-        
-        return newAccount
+        return await newAccount.save();
     }
 
     async findAllAccounts(email: string): Promise<AccountDocument[]> {
@@ -101,7 +96,7 @@ export class AccountService {
         const user = await this.userRepository.findOne({
             where: { user_name: userNameClient }
         });
-        if (!user) throw new NotFoundException('User not found');
+        if (!user) throw new NotFoundException('receiver user not found');
 
         const account = await this.accountModel.findOne({ accountNumber }).exec();
         if (!account) throw new NotFoundException('Account not found');

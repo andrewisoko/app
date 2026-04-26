@@ -12,7 +12,7 @@ export enum UserType {
     DEFAULT = "default",
     COMPETED = "completed",
 }
-@Entity("user")
+@Entity("users")
 export class User {
 
     @PrimaryGeneratedColumn('uuid')
@@ -38,8 +38,8 @@ export class User {
     @Column( 'varchar', { length:10 , default: 'James' })
         surname:string;
 
-    @Column( 'integer', { default:123435673 } )
-        mobile_number: number
+    @Column( 'varchar', { default:123435673 } )
+        mobile_number: string
 
     @Column( 'varchar', { length:12 ,default: 'JoJames2345' } )
         user_name:string;
