@@ -1,5 +1,6 @@
 import { IsBoolean, IsNotEmpty, IsString } from 'class-validator';
 
+
 export class ReceivedContractDto {
     @IsString()
     @IsNotEmpty()
@@ -7,7 +8,7 @@ export class ReceivedContractDto {
 
     @IsString()
     @IsNotEmpty()
-    receiverUsername: string;
+    receiverIds: string;
 
     @IsBoolean()
     accepted: boolean;

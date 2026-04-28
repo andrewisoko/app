@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { Contract, SPLIT_AGREEMENT, CONTRACT_STATUS } from './entity/contract.entity';
 import { Transaction } from 'src/transaction/entity/transaction.entity';
 import { Role, User } from 'src/user/entity/user.entity';
@@ -11,6 +11,7 @@ import { Repository } from 'typeorm';
 
 
 
+
 export interface contractProps{
 
     sender: string,
@@ -18,13 +19,13 @@ export interface contractProps{
     split_agreement: string,
     contractStatus: string,
     time_agreement:Date[]
-    sender_percentage?: number;
-    sender_amount?: number;
-    receiver_percentage?: number[];
-    receiver_amount?: number[];
-    repayment_agreement?:string,
-    event_agreement?:string,
-    location_agreement?:string,
+    sender_percentage: number;
+    sender_amount: number;
+    receiver_percentage: number[];
+    receiver_amount: number[];
+    repayment_agreement:string,
+    event_agreement:string,
+    location_agreement:string,
 
 } 
 @Injectable()
@@ -39,7 +40,11 @@ export class ContractService {
 
 
 
-    async sendContract( contract:contractProps, registerDto:Partial<RegisterDto> ){
+
+
+    async sendContract( contract:Partial<contractProps>, registerDto:Partial<RegisterDto> ){
+
+        // const receiverIds: MongoId[] = parseMongoIds(contract.receiver ?? []);
 
         const contractPayload = this.contractRepository.create({
             sender: contract.sender,
@@ -59,25 +64,29 @@ export class ContractService {
         const contractCreated = await this.contractRepository.save(contractPayload);
 
         // Handle multiple receivers
-        for (const receiverName of contractCreated.receiver) {
-            const receiverUser = await this.userRepository.findOne( { where: { user_name: receiverName }})
-            if ( ! receiverUser ){
-                const randomFour = Math.floor(Math.random() * 100000) 
-                const password = crypto.randomUUID();
+        for (const receiverId of contractCreated.receiver) {
 
-                const defaultUser = await this.userService.createUser({
-                                    role:Role.USER,
-                                    name:registerDto.name,
-                                    surname:registerDto.surname,
-                                    userName: `default_user${randomFour}`,
-                                    mobileNumber:registerDto.mobileNumber,
-                                    userType:UserType.DEFAULT,
-                                    email:registerDto.email,
-                                    password:password,
-                                    confirmPassword: password
-                                })
+            const receiverUser = await this.userRepository.findOne({ where: { id: receiverId as string } });
+          
+            if ( ! receiverUser ){
+
+                console.log('rec user inexistent',receiverUser)
+                // const randomFour = Math.floor(Math.random() * 100000) 
+                // const password = crypto.randomUUID();
+
+                // const defaultUser = await this.userService.createUser({
+                //                     role:Role.USER,
+                //                     name:registerDto.name,
+                //                     surname:registerDto.surname,
+                //                     userName: `default_user${randomFour}`,
+                //                     mobileNumber:registerDto.mobileNumber,
+                //                     userType:UserType.DEFAULT,
+                //                     email:registerDto.email,
+                //                     password:password,
+                //                     confirmPassword: password
+                //                 })
                 
-                await this.userRepository.save(defaultUser)
+                // await this.userRepository.save(defaultUser)
                 /* scan qr code to activate dummy account */
             }else{
                 await this.inboxService.postInbox(contractCreated ,receiverUser)

@@ -14,6 +14,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { firstValueFrom } from 'rxjs';
 
+
 @Injectable()
 export class InboxService {
 
@@ -73,16 +74,16 @@ export class InboxService {
         
     }
 
-    async ContractReceivedOnInbox( contractId: string, receiverUsername: string, accepted:boolean ){
+    async ContractReceivedOnInbox( contractId: string, receiverId: string, accepted:boolean ){
 
         let inboxReceiver;
 
-        if (!contractId || !receiverUsername) {
+        if (!contractId || !receiverId) {
             throw new BadRequestException('contractId and receiverUsername are required');
         };
 
         const receiverUser = await this.userRepository.findOne({
-            where: { user_name: receiverUsername },
+            where: { id: receiverId as string },
             relations: ['inbox'],
         });
 
@@ -97,7 +98,7 @@ export class InboxService {
         };
 
         const receivers = Array.isArray(contract.receiver) ? contract.receiver : [];
-        if (!receivers.includes(receiverUsername)) {
+        if (!receivers.includes(receiverId as string)) {
             throw new UnauthorizedException('Receiver is not a participant in this contract');
         };
 
@@ -157,7 +158,7 @@ export class InboxService {
 
             const bearerToken = this.createContractToken(
                 contractKey,
-                receiverUsername,
+                receiverId,
                 contractDecision.id,
                 {
                     account: Array.isArray(receiverUser.accounts) ? receiverUser.accounts[0] : undefined,
@@ -186,7 +187,7 @@ export class InboxService {
                             repaymentAgreement: contractDecision.repayment_agreement,
                             eventAgreement: contractDecision.event_agreement,
                             locationAgreement: contractDecision.location_agreement,
-                            acceptedBy: receiverUsername,
+                            acceptedBy: receiverId,
                         },
                     },
                 },

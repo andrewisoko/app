@@ -2,6 +2,8 @@ import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateCol
 import { Transaction } from 'src/transaction/entity/transaction.entity';
 import { Inbox } from 'src/inbox/entity/inbox.entity';
 
+
+
 export enum SPLIT_AGREEMENT {
     PERCENTAGE = 'percentage',
     AMOUNT = 'amount',

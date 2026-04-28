@@ -41,7 +41,7 @@ export class User {
     @Column( 'varchar', { default:123435673 } )
         mobile_number: string
 
-    @Column( 'varchar', { length:12 ,default: 'JoJames2345' } )
+    @Column( 'varchar', { length:50 ,default: 'JoJames2345' } )
         user_name:string;
 
     @Column('varchar', { length:30 , default: 'JohnJames100@email.com' })
