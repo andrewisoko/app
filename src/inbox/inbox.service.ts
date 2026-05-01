@@ -130,11 +130,7 @@ export class InboxService {
                 throw new NotFoundException('Contract not found');
             };
     
-            // const receivers = Array.isArray(contract.receiver) ? contract.receiver : [];
-            // if (!receivers.includes(receiverUser.id) && !receivers.includes(receiverAccountId)) {
-            //     throw new UnauthorizedException('Receiver is not a participant in this contract');
-            // };
-
+        
             contract.contract_status = accepted ? CONTRACT_STATUS.ACCEPTED : CONTRACT_STATUS.DECLINED;
 
             const contractDecision = await this.contractRepository.save(contract);

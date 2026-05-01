@@ -52,16 +52,22 @@ export class ContractService {
 
         const senderUser = await this.userRepository.findOne({where:{user_name:contract.sender}});
         if( ! senderUser ) throw new NotFoundException("error at send contract level 404: sender user not found")
-        const senderAccountId = senderUser.accounts[0];
+
+        const senderAccount = await this.accountModel.findOne({ customer: senderUser.id }).exec();
+        if( ! senderAccount ) throw new NotFoundException("error at send contract level 404: sender account not found")
+        const senderAccountId = String(senderAccount._id);
 
 
         let receiverAccountIds :string[] = [];
 
-        for ( const usernames of contract.receiver?? []){
+        for ( const usernames of contract.receiver ?? []){
             const receiverUser = await this.userRepository.findOne({where:{user_name:usernames}})
             if(! receiverUser ) throw new NotFoundException("error at send contract level 404: receiver user not found")
 
-            receiverAccountIds.push(String(receiverUser.accounts[0]))
+            const receiverAccount = await this.accountModel.findOne({ customer: receiverUser.id }).exec();
+            if( ! receiverAccount ) throw new NotFoundException(`error at send contract level 404: account not found for receiver ${usernames}`)
+
+            receiverAccountIds.push(String(receiverAccount._id));
         }
      
 

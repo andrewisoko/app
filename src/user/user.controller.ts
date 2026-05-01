@@ -34,16 +34,16 @@ export class UserController {
                 const userName = registerDto.name.slice( 0,3 ) + registerDto.surname + randomFour.toString();
 
                
+                const mobileNumber = registerDto.mobile_number ?? registerDto.mobileNumber;
                 return this.userService.createUser({
                     role:Role.USER,
+                    user_type:UserType.COMPETED,
                     name:registerDto.name,
                     surname:registerDto.surname,
-                    userName:userName,
-                    mobileNumber:registerDto.mobileNumber,
-                    userType:UserType.COMPETED,
+                    mobile_number:mobileNumber,
+                    user_name:userName,
                     email:registerDto.email,
                     password:hashedpassword,
-                    confirmPassword:hashedpassword
                 })
             }
 

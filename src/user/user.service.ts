@@ -2,7 +2,6 @@ import { Injectable, NotFoundException,UnauthorizedException } from '@nestjs/com
 import { User } from './entity/user.entity';
 import { InjectRepository} from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { RegisterDto } from './signUp.signIn/registerDto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Account, AccountDocument } from 'src/account/document/account.doc';
@@ -10,6 +9,7 @@ import { Inbox } from 'src/inbox/entity/inbox.entity';
 import { AccountService } from 'src/account/account.service';
 import { VirtualCardService } from 'src/virtual_card/virtual.card.service';
 import { VirtualCard } from 'src/virtual_card/entity/virtual.card.entity';
+import { RegisterDto } from './signUp.signIn/registerDto';
 
 @Injectable()
 export class UserService {
@@ -33,10 +33,12 @@ export class UserService {
         return await this.userRepository.findOneBy({email})
     }
 
-    async createUser(data:Partial<RegisterDto>){
+    async createUser(data:Partial<User>){
 
+        
         const user = this.userRepository.create(data);
         const savedUser = await this.userRepository.save(user);
+        
         const fullName = `${savedUser.name} ${savedUser.surname}`;
 
         const userAccount = await this.accountService.createAccount(

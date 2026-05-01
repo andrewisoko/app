@@ -1,6 +1,6 @@
 import { User } from "src/user/entity/user.entity";
 import { Contract } from "src/contract/entity/contract.entity";
-import { Entity, PrimaryGeneratedColumn, OneToOne, JoinColumn, CreateDateColumn, Column } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, OneToOne, JoinColumn, CreateDateColumn, UpdateDateColumn, Column } from "typeorm";
 
 @Entity("inbox")
 export class Inbox {
@@ -8,8 +8,11 @@ export class Inbox {
         @PrimaryGeneratedColumn('uuid')
         id: string;
 
-        @CreateDateColumn({ name: 'timestamp' })
-        createdAt: Date;
+         @CreateDateColumn({ name: 'created_at' })
+                createdAt: Date;
+        
+        @UpdateDateColumn({ name: 'updated_at' })
+        updatedAt: Date;
 
         @Column({ nullable: true, type: 'simple-json' })
         mostRecent: Partial<Contract>[];
