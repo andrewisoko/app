@@ -11,6 +11,7 @@ import { Repository } from 'typeorm';
 import { InjectModel } from '@nestjs/mongoose';
 import { AccountDocument } from 'src/account/document/account.doc';
 import { Model } from 'mongoose';
+import { time } from 'console';
 
 
 
@@ -48,8 +49,8 @@ export class ContractService {
 
     async sendContract( contract:Partial<contractProps>, registerDto:Partial<RegisterDto> ){
 
-        // const receiverIds: MongoId[] = parseMongoIds(contract.receiver ?? []);
-
+        
+    
         const senderUser = await this.userRepository.findOne({where:{user_name:contract.sender}});
         if( ! senderUser ) throw new NotFoundException("error at send contract level 404: sender user not found")
 
@@ -69,7 +70,10 @@ export class ContractService {
 
             receiverAccountIds.push(String(receiverAccount._id));
         }
-     
+
+        if( ! contract.time_agreement ) throw new NotFoundException('missing time agreement');        
+        if( new Date(contract.time_agreement[0]) < new Date(Date.now())) throw new Error('invalid start time agreement');
+        if( new Date(contract.time_agreement[1]) <= new Date(Date.now())) throw new Error('invalid end time agreement');
 
         const contractPayload = this.contractRepository.create({
             sender: senderAccountId,
