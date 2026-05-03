@@ -32,19 +32,19 @@ export class User {
     })
         user_type: UserType
 
-    @Column( 'varchar', { length:10 , default: 'John' })
+    @Column( 'varchar', { length:10 , default: 'user' })
         name:string;
 
-    @Column( 'varchar', { length:10 , default: 'James' })
+    @Column( 'varchar', { length:10 , default: 'Default' })
         surname:string;
 
     @Column( 'varchar', { default:123435673 } )
         mobile_number: string
 
-    @Column( 'varchar', { length:50 ,default: 'JoJames2345' } )
+    @Column( 'varchar', { length:50 ,default: 'UserDef2345' } )
         user_name:string;
 
-    @Column('varchar', { length:30 , default: 'JohnJames100@email.com' })
+    @Column('varchar', { length:30 , default: 'userdefault100@email.com' })
         email:string;
 
     @Column('varchar',{length:50, default:["550e8400-e29c-41d4-a715-446655440000"]})

@@ -10,6 +10,7 @@ import { ConfigModule } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AccountSchema } from 'src/account/document/account.doc';
+import { VirtualCard } from 'src/virtual_card/entity/virtual.card.entity';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { AccountSchema } from 'src/account/document/account.doc';
       Inbox,
       User,
       Contract,
+      VirtualCard
     ]),
   ],
   controllers: [InboxController],

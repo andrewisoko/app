@@ -16,11 +16,19 @@ export enum CONTRACT_STATUS {
     PENDING = 'pending',
 }
 
+export enum CONTRACT_TYPE {
+    ONE_TIME = "one_time",
+    EXISTING_USER = "existing_user"
+}
+
 @Entity('contract')
 export class Contract {
 
     @PrimaryGeneratedColumn('uuid')
         id: string;
+
+    @Column({ type: 'enum', enum: CONTRACT_TYPE, default:CONTRACT_TYPE.EXISTING_USER })
+        contract_type:CONTRACT_TYPE;
 
     @Column({ type: 'varchar' })
         sender: string;

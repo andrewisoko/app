@@ -10,12 +10,14 @@ import { Repository } from 'typeorm';
 import { Model } from 'mongoose';
 import { Inbox } from './entity/inbox.entity';
 import { User } from 'src/user/entity/user.entity';
-import { Contract, CONTRACT_STATUS } from 'src/contract/entity/contract.entity';
+import { Contract, CONTRACT_STATUS, CONTRACT_TYPE } from 'src/contract/entity/contract.entity';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { firstValueFrom } from 'rxjs';
 import { Account, AccountDocument } from 'src/account/document/account.doc';
+import { ObjectId } from 'typeorm/browser';
+import { VirtualCard } from 'src/virtual_card/entity/virtual.card.entity';
 
 
 @Injectable()
@@ -25,6 +27,7 @@ export class InboxService {
         @InjectRepository( Inbox ) private readonly inboxRepository: Repository<Inbox>,
         @InjectRepository( User ) private readonly userRepository: Repository<User>,
         @InjectRepository( Contract ) private readonly contractRepository: Repository<Contract>,
+        @InjectRepository( VirtualCard ) private readonly vcRepository: Repository<VirtualCard>,
         @InjectModel('Account') private readonly accountModel: Model<AccountDocument>,
         private readonly httpService: HttpService,
         private readonly configService: ConfigService,
@@ -103,42 +106,33 @@ export class InboxService {
 
     async ContractReceivedOnInbox( contractId: string, receiverAccountId: string, accepted:boolean ){
 
-        let inboxReceiver;
-
         try {
-            
+
             if (!contractId || !receiverAccountId) {
                 throw new BadRequestException('contractId and receiverUsername are required');
-            };
-    
-            
+            }
+
             const receiverAccountUser = await this.accountModel.findById(receiverAccountId).exec();
-            if (!receiverAccountUser) {
-                throw new NotFoundException('Receiver account not found');
-            };
+            if (!receiverAccountUser) throw new NotFoundException('Receiver account not found');
 
             const receiverUser = await this.userRepository.findOne({
                 where: { id: String(receiverAccountUser.customer) },
                 relations: ['inbox'],
             });
-            if (!receiverUser) {
-                throw new NotFoundException('Receiver user not found');
-            };
-            const contract = await this.contractRepository.findOne({ where: { id: contractId } });
-    
-            if (!contract) {
-                throw new NotFoundException('Contract not found');
-            };
-    
-        
-            contract.contract_status = accepted ? CONTRACT_STATUS.ACCEPTED : CONTRACT_STATUS.DECLINED;
+            if (!receiverUser) throw new NotFoundException('Receiver user not found');
 
+            const contract = await this.contractRepository.findOne({ where: { id: contractId } });
+            if (!contract) throw new NotFoundException('Contract not found');
+
+            contract.contract_status = accepted ? CONTRACT_STATUS.ACCEPTED : CONTRACT_STATUS.DECLINED;
             const contractDecision = await this.contractRepository.save(contract);
-            inboxReceiver = receiverUser.inbox
+
+            const inboxReceiver = receiverUser.inbox
                 ? await this.inboxRepository.findOne({ where: { id: receiverUser.inbox.id } })
                 : null;
-    
+
             if (inboxReceiver) {
+
                 const decisionSnapshot: Partial<Contract> = {
                     id: contractDecision.id,
                     sender: contractDecision.sender,
@@ -156,101 +150,119 @@ export class InboxService {
                     createdAt: contractDecision.createdAt,
                     updatedAt: contractDecision.updatedAt,
                 };
-    
-            const existingHistory = Array.isArray(inboxReceiver.history) ? inboxReceiver.history : [];
-            inboxReceiver.history = [...existingHistory, decisionSnapshot];
-            inboxReceiver.mostRecent = [decisionSnapshot];
-            inboxReceiver.contract = contractDecision;
-            inboxReceiver.user = receiverUser;
-    
-    
-            //------------------//
-            //------------------//
-            //------------------//
-            //User decison here //
-            //------------------//
-            //------------------//
-            //------------------//
-    
-    
-            if( accepted === true){
-       
-                await this.inboxRepository.save(inboxReceiver);
-                };
-    
-                const gatewayUrl = this.configService.get<string>( 'CONTRACT_GATEWAY_URL' ); 
-                if( !gatewayUrl ) throw new NotFoundException('gateway url not found' );
-    
-                const contractKey = this.configService.get<string>('CONTRACT_KEY');
-                if( !contractKey ) throw new NotFoundException('contractKey not found' );
-    
-                const bearerToken = this.createContractToken(
-                    contractKey,
-                    receiverUser.id,
-                    contractDecision.id,
-                    {
-                        account: contractDecision.sender,
-                        role: "contract",
-                    },
-                );
 
-                const response = await firstValueFrom(
-                this.httpService.post(
-                    gatewayUrl,
-                    {
-                        contractId: contractDecision.id,
-                        sender: contractDecision.sender,
-                        receiver: contractDecision.receiver,
-                        split_agreement: contractDecision.split_agreement,
-                        contractStatus: contractDecision.contract_status,
-                        time_agreement: this.parseTimeAgreement(contractDecision.time_agreement),
-                        sender_percentage: Number(contractDecision.sender_percentage),
-                        receiver_percentage: Array.isArray(contractDecision.receiver_percentage)
-                            ? contractDecision.receiver_percentage.map(Number)
-                            : [],
-                        sender_amount: Number(contractDecision.sender_amount),
-                        receiver_amount: Array.isArray(contractDecision.receiver_amount)
-                            ? contractDecision.receiver_amount.map(Number)
-                            : [],
-                        repayment_agreement: contractDecision.repayment_agreement,
-                        event_agreement: contractDecision.event_agreement,
-                        location_agreement: contractDecision.location_agreement,
-                        acceptedBy: receiverUser.id,
-                    },
-                    {
-                        headers: {
-                            Authorization: `Bearer ${bearerToken}`,
-                                     },
+                const existingHistory = Array.isArray(inboxReceiver.history) ? inboxReceiver.history : [];
+                inboxReceiver.history = [...existingHistory, decisionSnapshot];
+                inboxReceiver.mostRecent = [decisionSnapshot];
+                inboxReceiver.contract = contractDecision;
+                inboxReceiver.user = receiverUser;
+
+                //------------------//
+                //  User decision   //
+                //------------------//
+
+                if (accepted === true) {
+
+                    await this.inboxRepository.save(inboxReceiver);
+
+                    contract.contract_type = CONTRACT_TYPE.EXISTING_USER
+                    await this.contractRepository.save(contract)
+
+                    const gatewayUrl = this.configService.get<string>('CONTRACT_GATEWAY_URL');
+                    if (!gatewayUrl) throw new NotFoundException('gateway url not found');
+
+                    const contractKey = this.configService.get<string>('CONTRACT_KEY');
+                    if (!contractKey) throw new NotFoundException('contractKey not found');
+
+                    const bearerToken = this.createContractToken(
+                        contractKey,
+                        receiverUser.id,
+                        contractDecision.id,
+                        { account: contractDecision.sender, role: 'contract' },
+                    );
+
+                    const response = await firstValueFrom(
+                        this.httpService.post(
+                            gatewayUrl,
+                            {
+                                contractId: contractDecision.id,
+                                sender: contractDecision.sender,
+                                receiver: contractDecision.receiver,
+                                split_agreement: contractDecision.split_agreement,
+                                contractStatus: contractDecision.contract_status,
+                                time_agreement: this.parseTimeAgreement(contractDecision.time_agreement),
+                                sender_percentage: Number(contractDecision.sender_percentage),
+                                receiver_percentage: Array.isArray(contractDecision.receiver_percentage)
+                                    ? contractDecision.receiver_percentage.map(Number)
+                                    : [],
+                                sender_amount: Number(contractDecision.sender_amount),
+                                receiver_amount: Array.isArray(contractDecision.receiver_amount)
+                                    ? contractDecision.receiver_amount.map(Number)
+                                    : [],
+                                repayment_agreement: contractDecision.repayment_agreement,
+                                event_agreement: contractDecision.event_agreement,
+                                location_agreement: contractDecision.location_agreement,
+                                acceptedBy: receiverUser.id,
                             },
+                            { headers: { Authorization: `Bearer ${bearerToken}` } },
                         ),
                     );
-    
-                return {
-                    message: 'Contract accepted and forwarded to gateway',
-                    contractId: contractDecision.id,
-                    contractStatus: contractDecision.contract_status,
-                    forwardedTo: gatewayUrl,
-                    gatewayResponse: response.data,
-                };
-    
-            }else{
-                await this.inboxRepository.save(inboxReceiver);
-    
-                      return {
-                    message: 'Contract declined from receiver user',
-                    contractId: contractDecision.id,
-                    contractStatus: contractDecision.contract_status,
-                    forwardedTo: null,
-                    gatewayResponse: null,
-                };
-               
-            };
-           
-        } catch (error) {
-            console.log('Error at conctract received on inbox level', error)
-        }
 
-    };
+                    return {
+                        message: 'Contract accepted and forwarded to gateway',
+                        contractId: contractDecision.id,
+                        contractStatus: contractDecision.contract_status,
+                        forwardedTo: gatewayUrl,
+                        gatewayResponse: response.data,
+                    };
+
+                } else if( accepted === false && contract.contract_type === CONTRACT_TYPE.ONE_TIME ){
+
+                    await this.inboxRepository.save(inboxReceiver);
+                    const accountDefaultReceiver = await this.accountModel.findById(contract.receiver[0]).exec();
+                    if( ! accountDefaultReceiver ) throw new NotFoundException( 'account of default user not found');
+
+                    const userDefault = await this.userRepository.findOne({
+                        where: { id: String(accountDefaultReceiver.customer) },
+                        relations: ['inbox'],
+                    });
+                    if( ! userDefault ) throw new NotFoundException( 'default user not found');
+
+                    await this.accountModel.deleteOne(accountDefaultReceiver);
+                    await this.vcRepository.delete(accountDefaultReceiver.mainVirtualCard);
+                    if (userDefault.inbox?.id) await this.inboxRepository.delete(userDefault.inbox.id);
+                    await this.userRepository.delete(accountDefaultReceiver.customer);
+                    
+
+                    console.log(`Default user ${ accountDefaultReceiver.customer } data deleted after contract declined`);
+                   
+
+                    return {
+                        message: 'Contract declined from new prospect receiver user',
+                        contractId: contractDecision.id,
+                        contractStatus: contractDecision.contract_status,
+                        forwardedTo: null,
+                        gatewayResponse: null,
+                    };
+                } else {
+
+                      await this.inboxRepository.save(inboxReceiver);
+
+                      return {
+                        message: 'Contract declined from receiver user',
+                        contractId: contractDecision.id,
+                        contractStatus: contractDecision.contract_status,
+                        forwardedTo: null,
+                        gatewayResponse: null,
+                    };
+
+                }
+            }
+
+        } catch (error) {
+            console.log('Error at contract received on inbox level', error);
+        }
+    }
 
 
     private createContractToken(

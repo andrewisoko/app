@@ -27,6 +27,6 @@ import { AccountSchema } from 'src/account/document/account.doc';
     MongooseModule.forFeature([{ name: 'Account', schema: AccountSchema }]),
   ],
   controllers: [VirtualCardController],
-  providers: [VirtualCardService]
+  providers: [VirtualCardService],
 })
 export class VirtualCardModule {}

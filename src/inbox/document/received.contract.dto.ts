@@ -1,4 +1,4 @@
-import { IsBoolean, IsNotEmpty, IsString } from 'class-validator';
+import { IsBoolean, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 
 export class ReceivedContractDto {
@@ -12,4 +12,8 @@ export class ReceivedContractDto {
 
     @IsBoolean()
     accepted: boolean;
+
+    @IsString()
+    @IsOptional()
+    defaultUserId?: string;
 }
