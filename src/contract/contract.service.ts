@@ -85,7 +85,7 @@ export class ContractService {
 
         if ( !contract.receiver || contract.receiver.length === 0 ) {
 
-            const randomFour = Math.floor(Math.random() * 100000);
+            const randomFour = Math.floor(Math.random() * 90000) + 10000;
             const password = crypto.randomUUID();
 
             const defaultUser = await this.userService.createUser({

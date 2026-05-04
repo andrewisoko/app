@@ -38,8 +38,8 @@ export class AccountService {
 
         if(!user) throw new NotFoundException("create account:user not found")
 
-        const accNumber = Math.floor(Math.random() * 1000000000 ) /* to check */
-        const pan = Math.floor(Math.random() * 10000000000000000 ).toString()
+        const accNumber = Math.floor(Math.random() * 90000000 ) + 10000000  /* 8 digits */
+        const pan = (Math.floor(Math.random() * 9e15) + 1e15).toString()
          const expiryDate = this.createExpiryDate()
      
         
@@ -60,13 +60,17 @@ export class AccountService {
 
 
         if (user.user_type !== UserType.DEFAULT) {
-            const userVirtualCard = await this.virtualCardService.createMainCard(
+            const unsavedCard = await this.virtualCardService.createMainCard(
                 fullName,
-                newAccount._id
+                pan,
+                accNumber,
+                newAccount._id,
+                
             );
 
-           newAccount.mainVirtualCard = userVirtualCard.id
-           await this.virtualCardRepository.save(userVirtualCard)
+            const userVirtualCard = await this.virtualCardRepository.save(unsavedCard);
+            await this.accountModel.findByIdAndUpdate(newAccount._id, { mainVirtualCard: userVirtualCard.id}).exec();
+            newAccount.mainVirtualCard = userVirtualCard.id;
         }
 
         return await newAccount.save();

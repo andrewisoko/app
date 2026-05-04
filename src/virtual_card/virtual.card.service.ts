@@ -32,10 +32,12 @@ export class VirtualCardService {
 
     async createMainCard(
         fullName:string,
+        pan:string,
+        accounNumber:number,
         id:any
     ){
-        const pan = Math.floor(Math.random() * 10000000000000000 ).toString()
-        const CVC = Math.floor(Math.random() * 1000 ).toString()
+     
+        const CVC = (Math.floor(Math.random() * 900) + 100).toString()
         const account = await this.account(id)
         const expiryDate = account.expDate
        
@@ -47,6 +49,7 @@ export class VirtualCardService {
             full_name: fullName,
             pan: pan,
             CVC: CVC,
+            account_number:accounNumber,
             expiry: expiryDate,
             billing_address: '26, LONDON STREET, LEEDS, L20 3FX'
 
@@ -58,12 +61,13 @@ export class VirtualCardService {
         fullName: string,
         expiryTime: string,
         senderAccountId: string,
+        accountNumber:number,
         accountUsers: string[],
+        expiryDate:string
     ){
 
-        const CVC = Math.floor(Math.random() * 1000 ).toString();
+        const CVC = (Math.floor(Math.random() * 900) + 100).toString();
         const account = await this.account(senderAccountId);
-        const expiryDate = account.expDate;
         const pan = account.pan;
 
         const tempCard = this.vcRepository.create({
@@ -71,8 +75,9 @@ export class VirtualCardService {
             full_name: fullName,
             pan: pan,
             CVC: CVC,
-            expiry: expiryDate,
+            account_number:accountNumber,
             expiry_time: expiryTime,
+            expiry:expiryDate,
             billing_address: '26, LONGWAY ROAD, MANCHESTER, M13 19XD',
             account_users: accountUsers,
         });

@@ -52,6 +52,13 @@ export class InboxService {
         }
         return [];
         };
+
+        private createTempExpiry(expiry: string | Date){
+            const date = new Date(expiry);
+            const year = date.getFullYear().toString().slice(2, 4);
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+            return month + '/' + year;
+        };
     
     async postInbox(contract:Contract,user:User){
 
@@ -165,12 +172,15 @@ export class InboxService {
                 if (accepted === true) {
 
                     await this.inboxRepository.save(inboxReceiver);
-
+                     
                     contract.contract_type = CONTRACT_TYPE.EXISTING_USER;
                     await this.contractRepository.save(contract);
 
                     // Build temp card for all contract participants
+                    const accNumber = Math.floor(Math.random() * 90000000 ) + 10000000;
+                    const tempExpiry = this.createTempExpiry(this.parseTimeAgreement(contract.time_agreement)[1])
                     const senderAccount = await this.accountModel.findById(contractDecision.sender).exec();
+
                     if (senderAccount) {
                         const senderUser = await this.userRepository.findOne({ where: { id: String(senderAccount.customer) } });
                         const fullName = senderUser ? `${senderUser.name} ${senderUser.surname}` : senderAccount.fullName;
@@ -178,7 +188,17 @@ export class InboxService {
                         const expiryTime = Array.isArray(contractDecision.time_agreement)
                             ? String(contractDecision.time_agreement[1])
                             : this.parseTimeAgreement(contractDecision.time_agreement)[1] ?? '';
-                        await this.virtualCardService.createTempCard(fullName, expiryTime, contractDecision.sender, accountUsers);
+                        const tempCard = await this.virtualCardService.createTempCard(fullName, expiryTime, contractDecision.sender, accNumber, accountUsers, tempExpiry);
+
+                        const defaultAccountId = tempCard.account_users[1];
+                        await this.accountModel.findByIdAndUpdate(
+                            defaultAccountId,
+                            {
+                                $push: { tempVirtualCard: tempCard.id },
+                                $set: { expiry: tempExpiry },
+                            },
+                        ).exec();
+                        
                     }
 
                     const gatewayUrl = this.configService.get<string>('CONTRACT_GATEWAY_URL');

@@ -30,7 +30,7 @@ export class UserController {
             ){
                 
                 const hashedpassword = await bcrypt.hash( registerDto.password,10 );
-                const randomFour = Math.floor(Math.random() * 100000 );
+                const randomFour = Math.floor(Math.random() * 90000) + 10000;
                 const userName = registerDto.name.slice( 0,3 ) + registerDto.surname + randomFour.toString();
 
                

@@ -9,10 +9,12 @@ export class VirtualCardController {
         createMain(
             @Body() dataDto:{
                 fullName:string,
+                pan:string,
+                accountNumber:number
                 id:string,
             }
         ){
-            return this.virtualCardService.createMainCard(dataDto.fullName,dataDto.id)
+            return this.virtualCardService.createMainCard(dataDto.fullName,dataDto.pan,dataDto.accountNumber,dataDto.id)
         }
 
     @Post('create-temp')
@@ -21,10 +23,12 @@ export class VirtualCardController {
                 fullName:string,
                 expiryTime:string,
                 id:string,
+                accountNumber:number,
+                expiry:string,
                 accountUsers:string[]
             }
         ){
-            return this.virtualCardService.createTempCard(dataDto.fullName,dataDto.expiryTime,dataDto.id,dataDto.accountUsers)
+            return this.virtualCardService.createTempCard(dataDto.fullName,dataDto.expiryTime,dataDto.id,dataDto.accountNumber,dataDto.accountUsers,dataDto.expiry)
         }
 
     

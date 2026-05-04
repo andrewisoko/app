@@ -26,6 +26,8 @@ export class VirtualCard {
 
         @Column()
                 pan:string;
+        @Column()
+                account_number:number;
 
         @Column()
                 CVC: string;

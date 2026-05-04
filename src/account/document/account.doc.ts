@@ -43,8 +43,8 @@ export class Account extends Document {
         default: ACCOUNT_STATUS.PENDING,
     })
         status: ACCOUNT_STATUS;
-
-      @Prop({ type: String, default: 'default main card'})
+s
+      @Prop({ type: String, default:""})
           mainVirtualCard: string;
 
       @Prop({ type: [String], required:false, default: [] })
