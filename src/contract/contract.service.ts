@@ -120,16 +120,18 @@ export class ContractService {
         } else {
 
             const confirmedUsers: User[] = [];
-            const confirmedUsernames: string[] = [];
+            const confirmedAccountIds: string[] = [];
 
             for (const username of contract.receiver) {
                 const receiverUser = await this.userRepository.findOne({ where: { user_name: username } });
                 if (!receiverUser) throw new NotFoundException(`error at send contract level 404: receiver user not found — ${username}`);
+                const receiverAccount = await this.accountModel.findOne({ customer: receiverUser.id }).exec();
+                if (!receiverAccount) throw new NotFoundException(`error at send contract level 404: receiver account not found — ${username}`);
                 confirmedUsers.push(receiverUser);
-                confirmedUsernames.push(receiverUser.user_name);
+                confirmedAccountIds.push(String(receiverAccount._id));
             }
 
-            const contractCreated = await this.createContract(contract, senderAccountId, confirmedUsernames);
+            const contractCreated = await this.createContract(contract, senderAccountId, confirmedAccountIds);
 
             for (const receiverUser of confirmedUsers) {
                 await this.inboxService.postInbox(contractCreated, receiverUser);

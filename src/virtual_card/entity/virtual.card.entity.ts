@@ -1,5 +1,5 @@
 import { User } from "src/user/entity/user.entity";
-import { Entity,PrimaryGeneratedColumn,Column,OneToMany } from "typeorm";
+import { Entity,PrimaryGeneratedColumn,Column,CreateDateColumn,UpdateDateColumn} from "typeorm";
 ;
 
 export enum CARDTYPE {
@@ -41,7 +41,11 @@ export class VirtualCard {
 
         @Column({ type: 'simple-array', nullable: true })
                 account_users:string[]
-      
-
+        
+         @CreateDateColumn({ name: 'created_at' })
+                created_at: Date;
+        
+        @UpdateDateColumn({ name: 'updated_at' })
+                updated_at: Date;
 
 }
