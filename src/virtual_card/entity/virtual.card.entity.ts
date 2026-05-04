@@ -39,7 +39,7 @@ export class VirtualCard {
         @Column({ type:'text', default: '26, LONDON STREET, LEEDS, L20 3FX' })
                 billing_address: string;
 
-        @Column('varchar',{length:50, default:["550e8400-e29c-41d4-a715-446655440000"]})
+        @Column({ type: 'simple-array', nullable: true })
                 account_users:string[]
       
 

@@ -156,7 +156,6 @@ export class InboxService {
                 const existingHistory = Array.isArray(inboxReceiver.history) ? inboxReceiver.history : [];
                 inboxReceiver.history = [...existingHistory, decisionSnapshot];
                 inboxReceiver.most_recent = [decisionSnapshot];
-                inboxReceiver.contract = contractDecision;
                 inboxReceiver.user = receiverUser;
 
                 //------------------//

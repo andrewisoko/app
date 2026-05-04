@@ -22,7 +22,7 @@ import { InboxService } from 'src/inbox/inbox.service';
         
         @Post('receiver-inbox-contract')
             ContractReceivedOnInbox(
-                @Body() dataDto: { contractId: string, receiverId: string, accepted: boolean, defaultUserId?: string }
+                @Body() dataDto: { contractId: string, receiverId: string, accepted: boolean }
             ){
                 return this.inboxService.ContractReceivedOnInbox(dataDto.contractId, dataDto.receiverId, dataDto.accepted)
             }
