@@ -36,10 +36,9 @@ export class VirtualCardController {
     @Post('generate-qr-code')
         generateQRCode(
             @Body() dataDto:{
-                pan:string,
-                expiry:string
+                token:string;
             }
         ){
-            return this.virtualCardService.cardQRCode(dataDto.pan, dataDto.expiry)
+            return this.virtualCardService.cardQRCode(dataDto.token)
         }
 }

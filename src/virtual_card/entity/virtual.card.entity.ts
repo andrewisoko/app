@@ -43,6 +43,9 @@ export class VirtualCard {
 
         @Column({ type: 'simple-array', nullable: true })
                 account_users:string[]
+
+        @Column({ type: 'text', nullable: true })
+                qr_token: string;
         
          @CreateDateColumn({ name: 'created_at' })
                 created_at: Date;

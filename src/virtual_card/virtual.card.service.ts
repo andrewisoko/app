@@ -6,6 +6,7 @@ import { JwtService } from '@nestjs/jwt';
 import { AccountDocument } from 'src/account/document/account.doc';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import * as QRCode from 'qrcode';
 
 
 
@@ -41,9 +42,9 @@ export class VirtualCardService {
         const account = await this.account(id)
         const expiryDate = account.expDate
        
-      
-      
-        return this.vcRepository.create({
+        const qr_token = this.jwtService.sign({ pan, expiry: expiryDate });
+
+        const card = await this.vcRepository.save(this.vcRepository.create({
 
             card_type: CARDTYPE.MAIN,
             full_name: fullName,
@@ -51,9 +52,13 @@ export class VirtualCardService {
             CVC: CVC,
             account_number:accounNumber,
             expiry: expiryDate,
-            billing_address: '26, LONDON STREET, LEEDS, L20 3FX'
+            billing_address: '26, LONDON STREET, LEEDS, L20 3FX',
+            qr_token,
 
-        })
+        }));
+
+        const qrCode = await this.cardQRCode(qr_token);
+        return { ...card, qrCode };
     }
 
     async createTempCard(
@@ -70,7 +75,9 @@ export class VirtualCardService {
         const account = await this.account(senderAccountId);
         const pan = account.pan;
 
-        const tempCard = this.vcRepository.create({
+        const qr_token = this.jwtService.sign({ pan, expiry: expiryDate });
+
+        const tempCard = await this.vcRepository.save(this.vcRepository.create({
             card_type: CARDTYPE.TEMP,
             full_name: fullName,
             pan: pan,
@@ -80,16 +87,16 @@ export class VirtualCardService {
             expiry:expiryDate,
             billing_address: '26, LONGWAY ROAD, MANCHESTER, M13 19XD',
             account_users: accountUsers,
-        });
+            qr_token,
+        }));
 
-        return this.vcRepository.save(tempCard);
+        const qrCode = await this.cardQRCode(qr_token);
+        return { ...tempCard, qrCode };
     }
 
-    cardQRCode(pan:string,expiry:string){
+    async cardQRCode(token: string): Promise<string> {
 
-        const token = this.jwtService.sign({
-            pan:pan,expiry:expiry
-        })
+        return QRCode.toDataURL(`Bearer ${token}`);
     }
     
 }
