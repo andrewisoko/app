@@ -13,7 +13,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { AccountSchema } from 'src/account/document/account.doc';
 import { AccountModule } from 'src/account/account.module';
 import { VirtualCard } from 'src/virtual_card/entity/virtual.card.entity';
-import { VirtualCardService } from 'src/virtual_card/virtual.card.service';
+import { VirtualCardModule } from 'src/virtual_card/virtual.card.module';
 
 
 @Module({
@@ -21,17 +21,18 @@ import { VirtualCardService } from 'src/virtual_card/virtual.card.service';
     TypeOrmModule.forFeature([User, Inbox,VirtualCard]),
     MongooseModule.forFeature([{ name: 'Account', schema: AccountSchema }]),
     AccountModule,
+    VirtualCardModule,
     PassportModule,
     JwtModule.registerAsync({
       useFactory: (configService: ConfigService) => ({
-        secret: configService.get<string>('JWT_USER.KEY'),
+        secret: configService.get<string>('JWT_USER_KEY'),
         signOptions: { expiresIn: '30m' },
       }),
       inject: [ConfigService],
     }),
   ],
   controllers: [UserController],
-  providers: [UserService, JwtStrategy, SignUpSignInService,VirtualCardService],
+  providers: [UserService, JwtStrategy, SignUpSignInService],
   exports: [JwtStrategy, SignUpSignInService, UserService],
 })
 export class UserModule {}

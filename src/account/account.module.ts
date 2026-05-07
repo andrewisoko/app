@@ -6,16 +6,16 @@ import { AccountService } from './account.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from 'src/user/entity/user.entity';
 import { VirtualCard } from 'src/virtual_card/entity/virtual.card.entity';
-import { VirtualCardService } from 'src/virtual_card/virtual.card.service';
-import { JwtService } from '@nestjs/jwt';
+import { VirtualCardModule } from 'src/virtual_card/virtual.card.module';
 
 @Module({
     imports: [
         MongooseModule.forFeature([{ name: 'Account', schema: AccountSchema }]),
-        TypeOrmModule.forFeature([User,VirtualCard])
+        TypeOrmModule.forFeature([User,VirtualCard]),
+        VirtualCardModule,
     ],
     controllers: [AccountController],
-    providers: [AccountService,VirtualCardService,JwtService],
+    providers: [AccountService],
     exports: [AccountService],
 })
 export class AccountModule {}

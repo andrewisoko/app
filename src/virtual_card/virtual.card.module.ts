@@ -16,7 +16,7 @@ import { AccountSchema } from 'src/account/document/account.doc';
       useFactory:(configService:ConfigService) => {
          return {
           global:true,
-          secret: configService.get<string>('JWT_CARD.KEY')
+          secret: configService.get<string>('JWT_CARD_KEY')
          }
       }
 
@@ -28,5 +28,6 @@ import { AccountSchema } from 'src/account/document/account.doc';
   ],
   controllers: [VirtualCardController],
   providers: [VirtualCardService],
+  exports: [VirtualCardService],
 })
 export class VirtualCardModule {}
