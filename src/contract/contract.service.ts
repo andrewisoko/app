@@ -11,7 +11,6 @@ import { Repository } from 'typeorm';
 import { InjectModel } from '@nestjs/mongoose';
 import { AccountDocument } from 'src/account/document/account.doc';
 import { Model } from 'mongoose';
-import { time } from 'console';
 import * as QRCode from 'qrcode';
 
 
