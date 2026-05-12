@@ -8,6 +8,14 @@ export enum Role {
     ADMIN = "admin",
 }
 
+export enum MainBank {
+    LLOYDS = 'lloyds',
+    BARCLAYS = 'barclays',
+    NATWEST = 'natwest',
+    SANTANDER = 'santander',
+    NATIONWIDE = 'nationwide'
+}
+
 export enum UserType {
     DEFAULT = "default",
     COMPETED = "completed",
@@ -56,6 +64,13 @@ export class User {
     @OneToOne( ()=> Inbox,inbox => inbox.user )
         @JoinColumn()
         inbox: Inbox;
+
+    @Column({
+        type:'enum',
+        enum:MainBank,
+        default:MainBank.BARCLAYS
+    })
+        main_bank: MainBank
     @CreateDateColumn({ name: 'created_at' })
         created_at: Date;
 
