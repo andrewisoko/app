@@ -55,6 +55,18 @@ export class UserController {
             return this.signUpSingIn.login(user)
         }
 
+    @Post('add/recipients')
+        async addRecipients(
+            @Body() userNameRecipient:string,
+            @Request() req
+        ){
+            const { username } = req.user_name
+            return await this.userService.addRecipient(
+                username,
+                userNameRecipient
+            )
+        }
+
     /**********************/
              /*Users*/
     /**********************/

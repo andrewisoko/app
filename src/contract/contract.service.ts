@@ -63,6 +63,15 @@ export class ContractService {
             event_agreement: contract.event_agreement,
             location_agreement: contract.location_agreement,
             });
+        
+            const userAccount = await this.accountModel.findById(senderAccountId);
+            if ( !userAccount ) throw new NotFoundException('user not found');
+            
+            const user = await this.userRepository.findOne({ where:{ accounts: userAccount.id }})
+            if ( !user ) throw new NotFoundException('user not found');
+
+            user.created_contract.push(contractPayload);
+            await this.userRepository.save(user);
 
             return this.contractRepository.save(contractPayload);
         }

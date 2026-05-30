@@ -1,6 +1,7 @@
 import { Entity,PrimaryGeneratedColumn, Column, OneToOne,JoinColumn,CreateDateColumn,UpdateDateColumn, ManyToOne } from "typeorm";
 import { OneToOne as TypeORMOneToOne } from "typeorm";
 import { Inbox } from "src/inbox/entity/inbox.entity";
+import { Contract } from "src/contract/entity/contract.entity";
 
 
 export enum Role {
@@ -59,7 +60,13 @@ export class User {
         accounts:string[];
 
     @Column( 'varchar', { default: 'Passwordxmx0'} )
-        password:string;  
+        password:string; 
+
+    @Column({ type:'simple-json', default: [] })
+        recipients:string[];
+    
+    @Column({ nullable: true, type: 'simple-json' })
+        created_contract: Partial<Contract>[];
 
     @OneToOne( ()=> Inbox,inbox => inbox.user )
         @JoinColumn()

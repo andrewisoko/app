@@ -10,6 +10,7 @@ import { AccountService } from 'src/account/account.service';
 import { VirtualCardService } from 'src/virtual_card/virtual.card.service';
 import { VirtualCard } from 'src/virtual_card/entity/virtual.card.entity';
 import { RegisterDto } from './signUp.signIn/registerDto';
+import { use } from 'passport';
 
 @Injectable()
 export class UserService {
@@ -62,6 +63,19 @@ export class UserService {
 
     async deleteUser(id:string){
         return await this.userRepository.delete(id)
+    }
+
+    async addRecipient( userName:string, userNameRecipient:string ){
+        
+        const user = await this.findUserByUsername(userName)
+        
+        if(!user) throw new NotFoundException('user not found');
+        user.recipients.push(userNameRecipient)
+        
+        await this.userRepository.save(user)
+        console.log('user', user)
+        
+        return `recipient ${userNameRecipient} added`
     }
 }
 
