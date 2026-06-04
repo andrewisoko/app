@@ -30,8 +30,8 @@ export interface contractProps{
     repayment_agreement:string,
     event_agreement:string,
     location_agreement:string,
-
 } 
+
 @Injectable()
 export class ContractService {
 
@@ -43,7 +43,14 @@ export class ContractService {
         private readonly inboxService: InboxService,
  ){}
 
-    private async createContract(
+    async getContract(id: string): Promise<Contract> {
+
+        const contract = await this.contractRepository.findOne({ where: { id } });
+        if (!contract) throw new NotFoundException(`Contract with id ${id} not found`);
+        return contract;
+    }
+
+    async createContract(
         contract: Partial<contractProps>,
         senderAccountId: string,
         receiverUsernames: string[],
@@ -78,7 +85,7 @@ export class ContractService {
 
 
 
-    async sendContract( contract:Partial<contractProps>, registerDto:Partial<RegisterDto> ){
+    async sendContract( contract:Partial<contractProps>, registerDto:Partial<RegisterDto> ):Promise<string>{
 
         const senderUser = await this.userRepository.findOne({where:{user_name:contract.sender}});
         if( !senderUser ) throw new NotFoundException("error at send contract level 404: sender user not found")
@@ -149,7 +156,5 @@ export class ContractService {
         }
 
     }
-
-
 
 }

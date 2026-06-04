@@ -31,6 +31,7 @@ export class VirtualCardService {
         }
     }
 
+
     async createMainCard(
         fullName:string,
         pan:string,
@@ -92,6 +93,13 @@ export class VirtualCardService {
 
         const qrCode = await this.cardQRCode(qr_token);
         return { ...tempCard, qrCode };
+    }
+
+    async getVirtualCard(id: string): Promise<VirtualCard> {
+
+        const card = await this.vcRepository.findOne({ where: { id } });
+        if (!card) throw new NotFoundException(`Virtual card with id ${id} not found`);
+        return card;
     }
 
     async cardQRCode(token: string): Promise<string> {

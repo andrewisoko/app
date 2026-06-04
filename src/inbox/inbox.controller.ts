@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { InboxService } from './inbox.service';
 import { Contract } from 'src/contract/entity/contract.entity';
 import { User } from 'src/user/entity/user.entity';
@@ -17,6 +17,26 @@ export class InboxController {
             dataDto.user
         )
     };
+
+    @Get('contracts')
+        getReceivedContracts(@Query('accountId') accountId: string) {
+            return this.inboxService.getReceivedContracts(accountId);
+        }
+
+    // @Post('contract/:id/accept')
+    //     acceptContract(@Param('id') id: string) {
+    //         return this.inboxService.acceptContract(id);
+    //     }
+
+    // @Post('contract/:id/decline')
+    //     declineContract(@Param('id') id: string) {
+    //         return this.inboxService.declineContract(id);
+    //     }
+
+    @Get(':id')
+        getInbox(@Param('id') id: string) {
+            return this.inboxService.getInbox(id);
+        }
 
     @Post('receiver-inbox-contract')
         receivedContractOnInbox(

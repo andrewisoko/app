@@ -77,5 +77,35 @@ export class UserService {
         
         return `recipient ${userNameRecipient} added`
     }
+
+
+    async getRecipient(userId: string, recipientUsername: string): Promise<string> {
+        
+        const user = await this.findUserById(userId);
+        if (!user) throw new NotFoundException('User not found');
+        
+        const recipient = user.recipients?.find(r => r === recipientUsername);
+        if (!recipient) {
+            throw new NotFoundException(`Recipient ${recipientUsername} not found in user's recipients list`);
+        }
+        
+        return recipient;
+    }
+
+    async deleteRecipient(userId: string, recipientUsername: string): Promise<string> {
+        
+        const user = await this.findUserById(userId);
+        if (!user) throw new NotFoundException('User not found');
+        
+        const recipientIndex = user.recipients.indexOf(recipientUsername);
+        if (recipientIndex === -1) {
+            throw new NotFoundException(`Recipient ${recipientUsername} not found in user's recipients list`);
+        }
+        
+        user.recipients.splice(recipientIndex, 1);
+        await this.userRepository.save(user);
+        
+        return `Recipient ${recipientUsername} removed successfully`;
+    }
 }
 

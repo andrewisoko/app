@@ -27,7 +27,7 @@ export class UserController {
     @Post('register')
          async createUser(
             @Body() registerDto:RegisterDto
-            ){
+            ): Promise<User> {
                 
                 const hashedpassword = await bcrypt.hash( registerDto.password,10 );
                 const randomFour = Math.floor(Math.random() * 90000) + 10000;
@@ -54,17 +54,45 @@ export class UserController {
             const user = await this.signUpSingIn.validateUser(loginDto.email,loginDto.password)
             return this.signUpSingIn.login(user)
         }
-
-    @Post('add/recipients')
+    
+    @UseGuards(JwtAuthGuard,RolesGuard)
+    @Roles(Role.ADMIN,Role.USER) 
+    @Post('add-recipients')
         async addRecipients(
             @Body() userNameRecipient:string,
             @Request() req
-        ){
+        ): Promise<string> {
             const { username } = req.user_name
             return await this.userService.addRecipient(
                 username,
                 userNameRecipient
             )
+        }
+
+    @UseGuards(JwtAuthGuard,RolesGuard)
+    @Roles(Role.ADMIN,Role.USER) 
+    @Get(':id/recipients/:recipientUsername')
+        async getRecipient(
+            @Param('id') id: string,
+            @Param('recipientUsername') recipientUsername: string
+        ): Promise<string> {
+            return await this.userService.getRecipient(id, recipientUsername);
+        }
+
+
+    @UseGuards(JwtAuthGuard,RolesGuard)
+    @Roles(Role.ADMIN,Role.USER) 
+    @Delete(':id/recipients/:recipientUsername')
+        async deleteRecipient(
+            @Param('id') id: string,
+            @Param('recipientUsername') recipientUsername: string,
+            @Request() req
+        ): Promise<string> {
+            const userId = req.user.id;
+            if (req.user.role !== Role.ADMIN && userId !== id) {
+                throw new UnauthorizedException('Cannot delete recipients for another user');
+            }
+            return await this.userService.deleteRecipient(id, recipientUsername);
         }
 
     /**********************/
@@ -75,7 +103,7 @@ export class UserController {
     @UseGuards(JwtAuthGuard,RolesGuard)
     @Roles(Role.ADMIN,Role.USER) 
     @Get(':id')
-        findUser(@Param() id:string):Promise<User|null>{
+        findUser(@Param('id') id:string):Promise<User|null>{
             return this.userService.findUserById(id)
         }
     
@@ -84,7 +112,7 @@ export class UserController {
     @Roles(Role.ADMIN,Role.USER) 
     @Delete(':id')
         deleteUser(
-        @Param() idUser:string,
+        @Param('id') idUser:string,
         @Request() req
         ){
             const {id} = req.user

@@ -1,4 +1,4 @@
-import { Controller,Post,Body } from '@nestjs/common';
+import { Controller,Post,Get,Param,Body } from '@nestjs/common';
 import { VirtualCardService } from './virtual.card.service';
 
 @Controller('virtual-card')
@@ -40,5 +40,10 @@ export class VirtualCardController {
             }
         ){
             return this.virtualCardService.cardQRCode(dataDto.token)
+        }
+
+    @Get(':id')
+        getVirtualCard(@Param('id') id: string) {
+            return this.virtualCardService.getVirtualCard(id);
         }
 }

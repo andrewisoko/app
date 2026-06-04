@@ -60,6 +60,44 @@ export class InboxService {
             return month + '/' + year;
         };
     
+    async getReceivedContracts(accountId: string): Promise<VirtualCard[]> {
+
+        const cards = await this.vcRepository
+            .createQueryBuilder('vc')
+            .where('vc.account_users LIKE :accountId', { accountId: `%${accountId}%` })
+            .getMany();
+
+        return cards;
+    }
+    // async acceptContract(contractId: string): Promise<any> {
+
+    //     const contract = await this.contractRepository.findOne({ where: { id: contractId } });
+    //     if (!contract) throw new NotFoundException(`Contract with id ${contractId} not found`);
+
+    //     const receiverAccountId = contract.receiver[0];
+    //     return this.ContractReceivedOnInbox(contractId, receiverAccountId, true);
+    // }
+
+    // async declineContract(contractId: string): Promise<any> {
+
+    //     const contract = await this.contractRepository.findOne({ where: { id: contractId } });
+    //     if (!contract) throw new NotFoundException(`Contract with id ${contractId} not found`);
+
+    //     const receiverAccountId = contract.receiver[0];
+    //     return this.ContractReceivedOnInbox(contractId, receiverAccountId, false);
+    // }
+
+    async getInbox(id: string): Promise<Inbox> {
+
+        const inbox = await this.inboxRepository.findOne({
+            where: { id },
+            relations: ['user', 'contract'],
+        });
+        if (!inbox) throw new NotFoundException(`Inbox with id ${id} not found`);
+        return inbox;
+    }
+
+
     async postInbox(contract:Contract,user:User){
 
         try{

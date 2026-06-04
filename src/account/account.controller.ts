@@ -38,6 +38,23 @@ export class AccountController {
         createAccountDto.initialDeposit,
         createAccountDto.fullName,
         username
-     )    
+     )
+
     }
+
+    // @UseGuards(JwtAuthGuard,RolesGuard)
+    // @Roles(Role.ADMIN,Role.USER) 
+    @Post('find-account')
+    findAccount(
+        @Body() dataDto:{ 
+            userName: string,
+            accountId: number
+        }
+    ){
+        return this.accountService.findAccount(
+            dataDto.userName,
+            dataDto.accountId
+        )
+    }
+    
 }

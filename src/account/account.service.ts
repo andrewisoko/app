@@ -94,17 +94,17 @@ export class AccountService {
 
 
 
-    async retrieveAccount(
-        userNameClient: string,
-        accountNumber: number
+    async findAccount(
+        userName: string,
+        accountId: number
         ): Promise<any> {
 
         const user = await this.userRepository.findOne({
-            where: { user_name: userNameClient }
+            where: { user_name: userName }
         });
-        if (!user) throw new NotFoundException('receiver user not found');
+        if (!user) throw new NotFoundException('user not found');
 
-        const account = await this.accountModel.findOne({ accountNumber }).exec();
+        const account = await this.accountModel.findById(accountId).exec()
         if (!account) throw new NotFoundException('Account not found');
 
         return {
