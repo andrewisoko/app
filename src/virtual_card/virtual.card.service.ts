@@ -102,6 +102,19 @@ export class VirtualCardService {
         return card;
     }
 
+    async getVirtualCards(accountNumber: number): Promise<VirtualCard[]> {
+
+        const cards = await this.vcRepository.find({ 
+            where: { account_number: accountNumber } 
+        });
+        
+        if (!cards || cards.length === 0) {
+            throw new NotFoundException(`No virtual cards found for account ${accountNumber}`);
+        }
+        
+        return cards;
+    }
+
     async cardQRCode(token: string): Promise<string> {
 
         return QRCode.toDataURL(`Bearer ${token}`);

@@ -42,8 +42,13 @@ export class VirtualCardController {
             return this.virtualCardService.cardQRCode(dataDto.token)
         }
 
-    @Get(':id')
+    @Get('card/:id')
         getVirtualCard(@Param('id') id: string) {
             return this.virtualCardService.getVirtualCard(id);
+        }
+
+    @Get('account/:accountNumber')
+        getVirtualCards(@Param('accountNumber') accountNumber: string) {
+            return this.virtualCardService.getVirtualCards(Number(accountNumber));
         }
 }
