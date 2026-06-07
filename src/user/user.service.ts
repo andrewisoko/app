@@ -91,6 +91,13 @@ export class UserService {
         
         return recipient;
     }
+    async getRecipients(userId: string): Promise<string[]> {
+        
+        const user = await this.findUserById(userId);
+        if (!user) throw new NotFoundException('User not found');
+        
+        return user.recipients
+    }
 
     async deleteRecipient(userId: string, recipientUsername: string): Promise<string> {
         

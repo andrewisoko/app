@@ -16,6 +16,7 @@ import * as QRCode from 'qrcode';
 
 
 
+
 export interface contractProps{
 
     sender: string,
@@ -71,15 +72,7 @@ export class ContractService {
             location_agreement: contract.location_agreement,
             });
         
-            const userAccount = await this.accountModel.findById(senderAccountId);
-            if ( !userAccount ) throw new NotFoundException('user not found');
-            
-            const user = await this.userRepository.findOne({ where:{ accounts: userAccount.id }})
-            if ( !user ) throw new NotFoundException('user not found');
-
-            user.created_contract.push(contractPayload);
-            await this.userRepository.save(user);
-
+    
             return this.contractRepository.save(contractPayload);
         }
 
@@ -98,7 +91,7 @@ export class ContractService {
         if( new Date(contract.time_agreement[0]) < new Date(Date.now())) throw new Error('invalid start time agreement');
         if( new Date(contract.time_agreement[1]) <= new Date(Date.now())) throw new Error('invalid end time agreement');
 
-        if ( !contract.receiver || contract.receiver.length === 0 ) {
+        if ( !contract.receiver || contract.receiver.length === 0 ) { // create default account for then confirm it 
 
             const randomFour = Math.floor(Math.random() * 90000) + 10000;
             const password = crypto.randomUUID();
@@ -132,25 +125,38 @@ export class ContractService {
 
             return 'contract sent to default account.'
 
-        } else {
+        } else { // already existing accounts 
 
             const confirmedUsers: User[] = [];
             const confirmedAccountIds: string[] = [];
+            try {
+                for (const username of contract.receiver) {
+                  
+                    const receiverUser = await this.userRepository.findOne({ where: { user_name: username } });
+                    if (!receiverUser) throw new NotFoundException(`error at send contract level 404: receiver user not found — ${username}`);
+                    const receiverAccount = await this.accountModel.findOne({ customer: receiverUser.id }).exec();
+                    if (!receiverAccount) throw new NotFoundException(`error at send contract level 404: receiver account not found — ${username}`);
+                    confirmedUsers.push(receiverUser);
+                    confirmedAccountIds.push(String(receiverAccount._id));
+                }
+    
+                const contractCreated = await this.createContract(contract, senderAccountId, confirmedAccountIds);
+                
+                
+                for (const receiverUser of confirmedUsers) {
 
-            for (const username of contract.receiver) {
-                const receiverUser = await this.userRepository.findOne({ where: { user_name: username } });
-                if (!receiverUser) throw new NotFoundException(`error at send contract level 404: receiver user not found — ${username}`);
-                const receiverAccount = await this.accountModel.findOne({ customer: receiverUser.id }).exec();
-                if (!receiverAccount) throw new NotFoundException(`error at send contract level 404: receiver account not found — ${username}`);
-                confirmedUsers.push(receiverUser);
-                confirmedAccountIds.push(String(receiverAccount._id));
+                    await this.inboxService.postInbox(contractCreated, receiverUser);
+                   
+                    
+                    senderUser.recipients.push(receiverUser.user_name);
+                    senderUser.created_contract.push(contractCreated);
+
+                    await this.userRepository.save(senderUser);
+                }
+            } catch (error) {
+                console.log('error at existing user / send contract level:',error)
             }
 
-            const contractCreated = await this.createContract(contract, senderAccountId, confirmedAccountIds);
-
-            for (const receiverUser of confirmedUsers) {
-                await this.inboxService.postInbox(contractCreated, receiverUser);
-            }
 
                return 'contract sent to receivers.'
         }

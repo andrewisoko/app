@@ -56,16 +56,16 @@ export class User {
     @Column('varchar', { length:30 , default: 'userdefault100@email.com' })
         email:string;
 
-    @Column('varchar',{length:50, default:["550e8400-e29c-41d4-a715-446655440000"]})
+    @Column('varchar',{length:50, default:"{}"})
         accounts:string[];
 
     @Column( 'varchar', { default: 'Passwordxmx0'} )
         password:string; 
 
-    @Column({ type:'simple-json', default: [] })
+    @Column({ type:'simple-json', default: '{}' })
         recipients:string[];
     
-    @Column({ nullable: true, type: 'simple-json' })
+    @Column({ type: 'simple-json',  default: '{}' })
         created_contract: Partial<Contract>[];
 
     @OneToOne( ()=> Inbox,inbox => inbox.user )

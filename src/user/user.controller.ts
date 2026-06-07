@@ -71,12 +71,20 @@ export class UserController {
 
     @UseGuards(JwtAuthGuard,RolesGuard)
     @Roles(Role.ADMIN,Role.USER) 
-    @Get(':id/recipients/:recipientUsername')
+    @Get(':id/recipient/:recipientUsername')
         async getRecipient(
             @Param('id') id: string,
             @Param('recipientUsername') recipientUsername: string
         ): Promise<string> {
             return await this.userService.getRecipient(id, recipientUsername);
+        }
+    @UseGuards(JwtAuthGuard,RolesGuard)
+    @Roles(Role.ADMIN,Role.USER) 
+    @Get(':id/recipients/:recipientUsername')
+        async getRecipients(
+            @Param('id') id: string,
+        ): Promise<string[]> {
+            return await this.userService.getRecipients(id);
         }
 
 
