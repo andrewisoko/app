@@ -57,12 +57,12 @@ export class UserController {
     
     @UseGuards(JwtAuthGuard,RolesGuard)
     @Roles(Role.ADMIN,Role.USER) 
-    @Post('add-recipients')
+    @Post('add-recipient')
         async addRecipients(
-            @Body() userNameRecipient:string,
+            @Body('userNameRecipient') userNameRecipient:string,
             @Request() req
         ): Promise<string> {
-            const { username } = req.user_name
+            const { username } = req.user.username
             return await this.userService.addRecipient(
                 username,
                 userNameRecipient
@@ -80,7 +80,7 @@ export class UserController {
         }
     @UseGuards(JwtAuthGuard,RolesGuard)
     @Roles(Role.ADMIN,Role.USER) 
-    @Get(':id/recipients/:recipientUsername')
+    @Get('/recipients/:id') 
         async getRecipients(
             @Param('id') id: string,
         ): Promise<string[]> {

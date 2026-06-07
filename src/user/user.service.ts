@@ -70,12 +70,17 @@ export class UserService {
         const user = await this.findUserByUsername(userName)
         
         if(!user) throw new NotFoundException('user not found');
-        user.recipients.push(userNameRecipient)
-        
+
+         if(user.recipients.includes(userNameRecipient)){
+            return 'existing recipient'
+         }else{
+             user.recipients.push(userNameRecipient)    
+            }
+        user.recipients.push(userNameRecipient)    
         await this.userRepository.save(user)
-        console.log('user', user)
+
         
-        return `recipient ${userNameRecipient} added`
+        return `recipient added`
     }
 
 
@@ -86,7 +91,7 @@ export class UserService {
         
         const recipient = user.recipients?.find(r => r === recipientUsername);
         if (!recipient) {
-            throw new NotFoundException(`Recipient ${recipientUsername} not found in user's recipients list`);
+            throw new NotFoundException(`get recipient] Recipient ${recipientUsername} not found in user's recipients list`);
         }
         
         return recipient;
@@ -94,7 +99,7 @@ export class UserService {
     async getRecipients(userId: string): Promise<string[]> {
         
         const user = await this.findUserById(userId);
-        if (!user) throw new NotFoundException('User not found');
+        if (!user) throw new NotFoundException('[get recipients] User not found');
         
         return user.recipients
     }
@@ -102,7 +107,7 @@ export class UserService {
     async deleteRecipient(userId: string, recipientUsername: string): Promise<string> {
         
         const user = await this.findUserById(userId);
-        if (!user) throw new NotFoundException('User not found');
+        if (!user) throw new NotFoundException('delete recipients] User not found');
         
         const recipientIndex = user.recipients.indexOf(recipientUsername);
         if (recipientIndex === -1) {

@@ -147,8 +147,9 @@ export class ContractService {
 
                     await this.inboxService.postInbox(contractCreated, receiverUser);
                    
-                    
-                    senderUser.recipients.push(receiverUser.user_name);
+                    if(senderUser.recipients.includes(receiverUser.user_name)){}else{
+                        senderUser.recipients.push(receiverUser.user_name);    
+                    }
                     senderUser.created_contract.push(contractCreated);
 
                     await this.userRepository.save(senderUser);
