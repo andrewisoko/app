@@ -18,20 +18,11 @@ export class InboxController {
         )
     };
 
-    @Get('contracts')
-        getReceivedContracts(@Query('accountId') accountId: string) {
-            return this.inboxService.getReceivedContracts(accountId);
-        }
-
-    // @Post('contract/:id/accept')
-    //     acceptContract(@Param('id') id: string) {
-    //         return this.inboxService.acceptContract(id);
+    // @Get('received-contracts')
+    //     getReceivedContracts(@Query('inboxId') inboxId: string) {
+    //         return this.inboxService.getReceivedContracts(inboxId);
     //     }
 
-    // @Post('contract/:id/decline')
-    //     declineContract(@Param('id') id: string) {
-    //         return this.inboxService.declineContract(id);
-    //     }
 
     @Get(':id')
         getInbox(@Param('id') id: string) {

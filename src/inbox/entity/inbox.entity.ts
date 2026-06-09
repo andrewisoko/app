@@ -23,8 +23,8 @@ export class Inbox {
         @OneToOne(() => User, user => user.inbox )
                 user: User;  /*check user database */
 
-        @OneToOne(() => Contract, contract => contract.inbox)
-        @JoinColumn({ name: 'contract_id' })
-                contract: Contract;
+        // @OneToOne(() => Contract, contract => contract.inbox)
+        // @JoinColumn({ name: 'contract_id' })
+                // contract: Contract;
 
 }

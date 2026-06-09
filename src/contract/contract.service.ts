@@ -21,6 +21,7 @@ export interface contractProps{
 
     sender: string,
     receiver: string[],
+    all_usernames: string[]
     split_agreement: string,
     contractStatus: string,
     time_agreement:Date[]
@@ -53,15 +54,22 @@ export class ContractService {
 
     async createContract(
         contract: Partial<contractProps>,
-        senderAccountId: string,
-        receiverUsernames: string[],
     ): Promise<Contract> {
 
+        if (!contract.sender) throw new Error('Contract sender is required');
+        const senderUser = await this.userRepository.findOne({where:{user_name:contract.sender }});
+        if( !senderUser ) throw new NotFoundException("error at create contract level 404: sender user not found")
+
+        if (!contract.receiver) throw new Error('Contract sender is required');
+        const allUsernames = [senderUser.user_name,...contract.receiver]
+    
+
         const contractPayload = this.contractRepository.create({
-            sender: senderAccountId,
+            sender: senderUser.user_name,
             sender_percentage: contract.sender_percentage,
             sender_amount: contract.sender_amount,
-            receiver: receiverUsernames,
+            receiver: contract.receiver,
+            all_usernames: allUsernames,
             time_agreement: contract.time_agreement,
             receiver_percentage: contract.receiver_percentage,
             receiver_amount: contract.receiver_amount,
@@ -71,21 +79,25 @@ export class ContractService {
             event_agreement: contract.event_agreement,
             location_agreement: contract.location_agreement,
             });
-        
+            
+            senderUser.created_contract.push(contractPayload);
     
-            return this.contractRepository.save(contractPayload);
+            return this.contractRepository.save( contractPayload );
         }
 
 
 
     async sendContract( contract:Partial<contractProps>, registerDto:Partial<RegisterDto> ):Promise<string>{
 
+
         const senderUser = await this.userRepository.findOne({where:{user_name:contract.sender}});
         if( !senderUser ) throw new NotFoundException("error at send contract level 404: sender user not found")
 
         const senderAccount = await this.accountModel.findOne({ customer: senderUser.id }).exec();
         if( !senderAccount ) throw new NotFoundException("error at send contract level 404: sender account not found")
-        const senderAccountId = String(senderAccount._id);
+        let senderAccountId = String(senderAccount._id);
+        contract.sender = senderAccountId
+
 
         if( !contract.time_agreement ) throw new NotFoundException('missing time agreement');
         if( new Date(contract.time_agreement[0]) < new Date(Date.now())) throw new Error('invalid start time agreement');
@@ -108,8 +120,9 @@ export class ContractService {
             });
 
             const savedDefaultUser = await this.userRepository.save(defaultUser);
-
-            const contractCreated = await this.createContract(contract, senderAccountId, [savedDefaultUser.accounts[0]]);
+            contract.receiver = [savedDefaultUser.accounts[0]];
+            
+            const contractCreated = await this.createContract(contract);
 
             contractCreated.contract_type = CONTRACT_TYPE.ONE_TIME;
             await this.contractRepository.save(contractCreated)
@@ -129,6 +142,8 @@ export class ContractService {
 
             const confirmedUsers: User[] = [];
             const confirmedAccountIds: string[] = [];
+            contract.sender = senderAccountId
+
             try {
                 for (const username of contract.receiver) {
                   
@@ -139,8 +154,8 @@ export class ContractService {
                     confirmedUsers.push(receiverUser);
                     confirmedAccountIds.push(String(receiverAccount._id));
                 }
-    
-                const contractCreated = await this.createContract(contract, senderAccountId, confirmedAccountIds);
+                contract.receiver = confirmedAccountIds
+                const contractCreated = await this.createContract(contract);
                 
                 
                 for (const receiverUser of confirmedUsers) {

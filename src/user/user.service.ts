@@ -25,7 +25,10 @@ export class UserService {
 
 
     async findUserById(id:string){
-        return await this.userRepository.findOneBy({id})
+        return await this.userRepository.findOne({
+            where: { id },
+            relations: ['inbox']
+        })
     }
     async findUserByUsername(username:string){
         return await this.userRepository.findOne({where:{user_name:username}})

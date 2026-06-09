@@ -60,32 +60,17 @@ export class InboxService {
             return month + '/' + year;
         };
     
-    async getReceivedContracts(accountId: string): Promise<VirtualCard[]> {
+    // async getReceivedContracts(inboxId: string): Promise<Contract[]> {
 
-        const cards = await this.vcRepository
-            .createQueryBuilder('vc')
-            .where('vc.account_users LIKE :accountId', { accountId: `%${accountId}%` })
-            .getMany();
+    //     const contracts = await this.inboxRepository
+    //         .createQueryBuilder('ib')
+    //         .where('ib. LIKE :inboxId', { id: `%${inboxId}%` })
+    //         .getMany();
 
-        return cards;
-    }
-    // async acceptContract(contractId: string): Promise<any> {
-
-    //     const contract = await this.contractRepository.findOne({ where: { id: contractId } });
-    //     if (!contract) throw new NotFoundException(`Contract with id ${contractId} not found`);
-
-    //     const receiverAccountId = contract.receiver[0];
-    //     return this.ContractReceivedOnInbox(contractId, receiverAccountId, true);
+    //     return contracts;
     // }
 
-    // async declineContract(contractId: string): Promise<any> {
 
-    //     const contract = await this.contractRepository.findOne({ where: { id: contractId } });
-    //     if (!contract) throw new NotFoundException(`Contract with id ${contractId} not found`);
-
-    //     const receiverAccountId = contract.receiver[0];
-    //     return this.ContractReceivedOnInbox(contractId, receiverAccountId, false);
-    // }
 
     async getInbox(id: string): Promise<Inbox> {
 
@@ -129,7 +114,7 @@ export class InboxService {
     
                 existingInbox.history = [...existingHistory, contractSnapshot];
                 existingInbox.most_recent = [contractSnapshot];
-                existingInbox.contract = contract;
+                // existingInbox.contract = contract;
                 existingInbox.user = user;
     
                 return await this.inboxRepository.save(existingInbox);
@@ -138,7 +123,7 @@ export class InboxService {
             const inboxPayload = this.inboxRepository.create({
                 history:[contractSnapshot],
                 most_recent:[contractSnapshot],
-                contract:contract,
+                // contract:contract,
                 user:user,
             });
     

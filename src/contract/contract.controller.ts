@@ -21,16 +21,12 @@ import { Contract } from './entity/contract.entity';
         
         @Post('create-contract')
             createContract(
-                @Body() contractData: {
-                    contract: Partial<contractProps>,
-                    senderAccountId: string,
-                    receiverAccountIds: string[]
-                }
+                @Body() contractData: Partial<contractProps>,
+              
             ): Promise<Contract> {
                 return this.contractService.createContract(
-                    contractData.contract,
-                    contractData.senderAccountId,
-                    contractData.receiverAccountIds
+                    contractData,
+
                 );
             }
         

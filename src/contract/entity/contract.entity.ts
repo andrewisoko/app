@@ -36,6 +36,9 @@ export class Contract {
     @Column({ type: 'simple-array' })
         receiver: string[];
 
+    @Column({ type: 'simple-array' })
+        all_usernames: string[];
+
     @Column({ type: 'enum', enum: SPLIT_AGREEMENT, default: SPLIT_AGREEMENT.AMOUNT })
         split_agreement: SPLIT_AGREEMENT;
 
@@ -69,8 +72,8 @@ export class Contract {
     @OneToMany(() => Transaction, transaction => transaction.contract)
         transactions: Transaction[];
 
-    @OneToOne(() => Inbox, inbox => inbox.contract)
-        inbox: Inbox;
+    // @OneToOne(() => Inbox, inbox => inbox.contract)
+    //     inbox: Inbox;
 
     @CreateDateColumn({ name: 'created_at' })
         created_at: Date;
