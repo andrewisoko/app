@@ -61,7 +61,8 @@ export class ContractService {
         if( !senderUser ) throw new NotFoundException("error at create contract level 404: sender user not found")
 
         if (!contract.receiver) throw new Error(' [create contract] Contract sender is required');
-        const allUsernames = [senderUser.user_name,...contract.receiver]
+        const allUsernames = [senderUser.user_name,...contract.receiver];
+
     
 
         const contractPayload = this.contractRepository.create({
@@ -101,7 +102,6 @@ export class ContractService {
         const senderAccount = await this.accountModel.findOne({ customer: senderUser.id }).exec();
         if( !senderAccount ) throw new NotFoundException("error at send contract level 404: sender account not found")
         let senderAccountId = String(senderAccount._id);
-        contract.sender = senderAccountId
 
 
         if( !contract.time_agreement ) throw new NotFoundException('missing time agreement');
@@ -147,6 +147,7 @@ export class ContractService {
 
             const confirmedUsers: User[] = [];
             const confirmedAccountIds: string[] = [];
+            if (!contract.receiver) throw new Error(' [send contract] Contract sender is required');
 
             try {
                 for (const username of contract.receiver) {
@@ -158,14 +159,15 @@ export class ContractService {
                     confirmedUsers.push(receiverUser);
                     confirmedAccountIds.push(String(receiverAccount._id));
                 }
-        
-
-            // if (!contract.receiver) throw new Error(' [send contract] Contract sender is required');
-            //     contract.receiver = confirmedAccountIds
+    
                 const contractCreated = await this.createContract(contract);
-                
-                
+                contractCreated.sender = senderAccountId;
+
+            
                 for (const receiverUser of confirmedUsers) {
+                    
+                    contractCreated.receiver =  confirmedAccountIds;
+                    await this.contractRepository.save(contractCreated);
 
                     await this.inboxService.postInbox(contractCreated, receiverUser);
                    
@@ -176,6 +178,8 @@ export class ContractService {
 
                     await this.userRepository.save(senderUser);
                 }
+
+
             } catch (error) {
                 console.log('error at existing user / send contract level:',error)
                 throw new HttpException('Custom error message', HttpStatus.BAD_REQUEST);
