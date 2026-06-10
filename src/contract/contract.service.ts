@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, HttpException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { Contract, SPLIT_AGREEMENT, CONTRACT_STATUS, CONTRACT_TYPE } from './entity/contract.entity';
 import { Transaction } from 'src/transaction/entity/transaction.entity';
 import { Role, User } from 'src/user/entity/user.entity';
@@ -56,11 +56,11 @@ export class ContractService {
         contract: Partial<contractProps>,
     ): Promise<Contract> {
 
-        if (!contract.sender) throw new Error('Contract sender is required');
+        if (!contract.sender) throw new Error('[create contract] Contract sender is required');
         const senderUser = await this.userRepository.findOne({where:{user_name:contract.sender }});
         if( !senderUser ) throw new NotFoundException("error at create contract level 404: sender user not found")
 
-        if (!contract.receiver) throw new Error('Contract sender is required');
+        if (!contract.receiver) throw new Error(' [create contract] Contract sender is required');
         const allUsernames = [senderUser.user_name,...contract.receiver]
     
 
@@ -80,7 +80,10 @@ export class ContractService {
             location_agreement: contract.location_agreement,
             });
             
-            senderUser.created_contract.push(contractPayload);
+        
+        senderUser.created_contract.push(contractPayload)
+        await this.userRepository.save(senderUser)
+      
     
             return this.contractRepository.save( contractPayload );
         }
@@ -89,7 +92,9 @@ export class ContractService {
 
     async sendContract( contract:Partial<contractProps>, registerDto:Partial<RegisterDto> ):Promise<string>{
 
+        
 
+        if (!contract.sender) throw new Error('[send contract] Contract sender is required');
         const senderUser = await this.userRepository.findOne({where:{user_name:contract.sender}});
         if( !senderUser ) throw new NotFoundException("error at send contract level 404: sender user not found")
 
@@ -142,7 +147,6 @@ export class ContractService {
 
             const confirmedUsers: User[] = [];
             const confirmedAccountIds: string[] = [];
-            contract.sender = senderAccountId
 
             try {
                 for (const username of contract.receiver) {
@@ -154,7 +158,10 @@ export class ContractService {
                     confirmedUsers.push(receiverUser);
                     confirmedAccountIds.push(String(receiverAccount._id));
                 }
-                contract.receiver = confirmedAccountIds
+        
+
+            // if (!contract.receiver) throw new Error(' [send contract] Contract sender is required');
+            //     contract.receiver = confirmedAccountIds
                 const contractCreated = await this.createContract(contract);
                 
                 
@@ -171,6 +178,7 @@ export class ContractService {
                 }
             } catch (error) {
                 console.log('error at existing user / send contract level:',error)
+                throw new HttpException('Custom error message', HttpStatus.BAD_REQUEST);
             }
 
 

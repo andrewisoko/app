@@ -62,10 +62,10 @@ export class User {
     @Column( 'varchar', { default: 'Passwordxmx0'} )
         password:string; 
 
-    @Column({ type:'simple-json', default: '{}' })
+    @Column({ type:'simple-json', default: [] })
         recipients:string[];
     
-    @Column({ type: 'simple-json',  default: '{}' })
+    @Column({ type: 'simple-json',  default: [] })
         created_contract: Partial<Contract>[];
 
     @OneToOne( ()=> Inbox,inbox => inbox.user )
