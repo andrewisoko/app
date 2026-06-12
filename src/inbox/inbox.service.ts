@@ -76,7 +76,7 @@ export class InboxService {
 
         const inbox = await this.inboxRepository.findOne({
             where: { id },
-            relations: ['user', 'contract'],
+            relations: ['user'],
         });
         if (!inbox) throw new NotFoundException(`Inbox with id ${id} not found`);
         return inbox;
@@ -91,6 +91,7 @@ export class InboxService {
                 id: contract.id,
                 sender: contract.sender,
                 receiver: contract.receiver,
+                all_usernames:contract.all_usernames,
                 split_agreement: contract.split_agreement,
                 contract_status: contract.contract_status,
                 time_agreement: contract.time_agreement,
@@ -111,11 +112,22 @@ export class InboxService {
     
             if (existingInbox) {
                 const existingHistory = Array.isArray(existingInbox.history) ? existingInbox.history : [];
+
+                if (
+                    existingInbox.most_recent_expires_at &&
+                    existingInbox.most_recent_expires_at < new Date()
+                    ) {
+                    existingInbox.most_recent = [];
+                    }
     
                 existingInbox.history = [...existingHistory, contractSnapshot];
                 existingInbox.most_recent = [contractSnapshot];
                 // existingInbox.contract = contract;
+                existingInbox.most_recent_expires_at = new Date(
+                    Date.now() + 60 * 60 * 1000 
+                    );
                 existingInbox.user = user;
+
     
                 return await this.inboxRepository.save(existingInbox);
             }

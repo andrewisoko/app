@@ -114,6 +114,12 @@ export class UserController {
         findUser(@Param('id') id:string):Promise<User|null>{
             return this.userService.findUserById(id)
         }
+    @UseGuards(JwtAuthGuard,RolesGuard)
+    @Roles(Role.ADMIN,Role.USER) 
+    @Get(':username')
+        findUserByUsername(@Param('username') username:string):Promise<User|null>{
+            return this.userService.findUserByUsername(username)
+        }
     
         
     @UseGuards(JwtAuthGuard,RolesGuard)

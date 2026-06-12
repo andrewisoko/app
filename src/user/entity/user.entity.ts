@@ -56,7 +56,7 @@ export class User {
     @Column('varchar', { length:30 , default: 'userdefault100@email.com' })
         email:string;
 
-    @Column('varchar',{length:50, default:"{}"})
+    @Column('varchar',{length:50, default:[] })
         accounts:string[];
 
     @Column( 'varchar', { default: 'Passwordxmx0'} )

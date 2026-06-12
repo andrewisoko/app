@@ -51,13 +51,13 @@ export class Contract {
     @Column({ type: 'numeric', default: 50 })
         sender_percentage: number;
 
-    @Column({ type: 'simple-array', nullable: true })
+    @Column({ type: 'simple-array', default: [] })
         receiver_percentage: number[];
 
     @Column({ type: 'numeric', default: 0 })
         sender_amount: number;
 
-    @Column({ type: 'simple-array', nullable: true })
+    @Column({ type: 'simple-array', default: [] })
         receiver_amount: number[];
 
     @Column({ type: 'varchar', nullable: true })

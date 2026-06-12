@@ -171,8 +171,9 @@ export class ContractService {
 
                     await this.inboxService.postInbox(contractCreated, receiverUser);
                    
-                    if(senderUser.recipients.includes(receiverUser.user_name)){}else{
-                        senderUser.recipients.push(receiverUser.user_name);    
+                    if(senderUser.recipients.includes(receiverUser.user_name) 
+                      || senderUser.user_name === receiverUser.user_name){}else{
+                      senderUser.recipients.push(receiverUser.user_name);    
                     }
                     senderUser.created_contract.push(contractCreated);
 

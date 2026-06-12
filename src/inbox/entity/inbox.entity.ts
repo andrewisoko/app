@@ -13,11 +13,14 @@ export class Inbox {
         
         @UpdateDateColumn({ name: 'updated_at' })
                 updated_at: Date;
+        
+        @Column({ nullable: true })
+                most_recent_expires_at: Date;
 
-        @Column({ nullable: true, type: 'simple-json' })
+        @Column({ type: 'simple-json', default : [] })
                 most_recent: Partial<Contract>[];
 
-        @Column({ nullable: true, type: 'simple-json' })
+        @Column({  type: 'simple-json' , default : [] })
                 history: Partial<Contract>[];
 
         @OneToOne(() => User, user => user.inbox )
