@@ -148,17 +148,20 @@ export class InboxService {
     };
 
 
-    async ContractReceivedOnInbox( contractId: string, receiverAccountId: string, accepted:boolean ){
+    async ContractReceivedOnInbox( contractId: string, receiverIds: string, accepted:boolean ){
 
         try {
 
-            if (!contractId || !receiverAccountId) {
-                throw new BadRequestException('contractId and receiverUsername are required');
+            if (!contractId || !receiverIds) {
+                throw new BadRequestException('contractId and receiverId are required');
             }
-
-            const receiverAccountUser = await this.accountModel.findById(receiverAccountId).exec();
+            
+            
+           const receiverAccountUser = await this.accountModel.findOne({
+                customer: receiverIds,
+                }); 
             if (!receiverAccountUser) throw new NotFoundException('Receiver account not found');
-
+              
             const receiverUser = await this.userRepository.findOne({
                 where: { id: String(receiverAccountUser.customer) },
                 relations: ['inbox'],
@@ -195,11 +198,18 @@ export class InboxService {
                     updated_at: contractDecision.updated_at,
                 };
 
-                const existingHistory = Array.isArray(inboxReceiver.history) ? inboxReceiver.history : [];
-                inboxReceiver.history = [...existingHistory, decisionSnapshot];
-                inboxReceiver.most_recent = [decisionSnapshot];
-                inboxReceiver.user = receiverUser;
+                const existingHistory = Array.isArray(inboxReceiver.history)
+                ? inboxReceiver.history
+                : [];
 
+                const updatedHistory = existingHistory.map(item =>
+                item.id === contractDecision.id
+                    ? decisionSnapshot
+                    : item
+                );
+
+                inboxReceiver.history = updatedHistory;
+                inboxReceiver.most_recent = [decisionSnapshot];
                 //------------------//
                 //  User decision   //
                 //------------------//
@@ -319,6 +329,7 @@ export class InboxService {
 
                     console.log(`All Default user ${ accountDefaultReceiver.customer } data succesfully deleted after contract declined`);
                    
+                    await this.contractRepository.save(contractDecision)
 
                     return {
                         message: 'Contract declined from new prospect receiver user',
@@ -328,9 +339,9 @@ export class InboxService {
                         gatewayResponse: null,
                     };
                 } else {
-
+                    
                       await this.inboxRepository.save(inboxReceiver);
-
+                    //   await this.contractRepository.save(contractDecision)
                       return {
                         message: 'Contract declined from receiver user',
                         contractId: contractDecision.id,
