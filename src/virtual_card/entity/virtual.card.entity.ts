@@ -45,7 +45,7 @@ export class VirtualCard {
                 account_users:string[]
 
         @Column({ type: 'text', nullable: true })
-                qr_token: string;
+                POS_token: string;
         
          @CreateDateColumn({ name: 'created_at' })
                 created_at: Date;

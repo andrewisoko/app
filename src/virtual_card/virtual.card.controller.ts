@@ -34,7 +34,7 @@ export class VirtualCardController {
     
 
     @Post('generate-qr-code')
-        generateQRCode(
+        getQRCode(
             @Body() dataDto:{
                 token:string;
             }

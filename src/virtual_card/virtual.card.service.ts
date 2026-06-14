@@ -8,6 +8,18 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import * as QRCode from 'qrcode';
 
+export interface CardDetails{
+
+    card_type: string,
+    full_name: string,
+    pan: string,
+    CVC: string
+    account_number: string,
+    expiry: string,
+    billing_address: string,
+    qr_token:string,
+
+}
 
 
 
@@ -37,13 +49,14 @@ export class VirtualCardService {
         pan:string,
         accounNumber:number,
         id:any
+       
     ){
      
         const CVC = (Math.floor(Math.random() * 900) + 100).toString()
         const account = await this.account(id)
         const expiryDate = account.expDate
        
-        const qr_token = this.jwtService.sign({ pan, expiry: expiryDate });
+        const POStoken = this.jwtService.sign({ pan, expiry: expiryDate });
 
         const card = await this.vcRepository.save(this.vcRepository.create({
 
@@ -54,12 +67,11 @@ export class VirtualCardService {
             account_number:accounNumber,
             expiry: expiryDate,
             billing_address: '26, LONDON STREET, LEEDS, L20 3FX',
-            qr_token,
+            POS_token: POStoken,
 
         }));
 
-        const qrCode = await this.cardQRCode(qr_token);
-        return { ...card, qrCode };
+        return card;
     }
 
     async createTempCard(
@@ -76,7 +88,7 @@ export class VirtualCardService {
         const account = await this.account(senderAccountId);
         const pan = account.pan;
 
-        const qr_token = this.jwtService.sign({ pan, expiry: expiryDate });
+        const POStoken = this.jwtService.sign({ pan, expiry: expiryDate });
 
         const tempCard = await this.vcRepository.save(this.vcRepository.create({
             card_type: CARDTYPE.TEMP,
@@ -88,11 +100,10 @@ export class VirtualCardService {
             expiry:expiryDate,
             billing_address: '26, LONGWAY ROAD, MANCHESTER, M13 19XD',
             account_users: accountUsers,
-            qr_token,
+            POS_token: POStoken,
         }));
 
-        const qrCode = await this.cardQRCode(qr_token);
-        return { ...tempCard, qrCode };
+        return tempCard;
     }
 
     async getVirtualCard(id: string): Promise<VirtualCard> {
@@ -115,9 +126,28 @@ export class VirtualCardService {
         return cards;
     }
 
-    async cardQRCode(token: string): Promise<string> {
+    async cardQRCode(cardId: string): Promise<string> {
 
-        return QRCode.toDataURL(`Bearer ${token}`);
+    const card = await this.vcRepository.findOne({
+        where: { id: cardId }
+    });
+
+    if (!card) {
+        throw new NotFoundException('Card not found');
     }
+
+    const qrPayload: CardDetails = {
+        card_type: card.card_type,
+        full_name: card.full_name,
+        pan: card.pan,
+        CVC: card.CVC,
+        account_number: card.account_number.toString(),
+        expiry: card.expiry,
+        billing_address: card.billing_address,
+        qr_token: card.POS_token,
+    };
+
+    return QRCode.toDataURL(JSON.stringify(qrPayload));
+}
     
 }
