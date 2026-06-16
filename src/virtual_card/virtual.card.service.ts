@@ -32,16 +32,16 @@ export class VirtualCardService {
         private readonly jwtService:JwtService,
 ){}
 
-    async account(id:string){
+    // async account(id:string){
 
-        const account = await this.accountModel.findById(id).exec()
-        if ( ! account ) throw new NotFoundException('{virtual card} account not found')
+    //     const account = await this.accountModel.findById(id).exec()
+    //     if ( ! account ) throw new NotFoundException('{virtual card} account not found')
         
-        return { 
-            expDate: account.expiry,
-            pan: account.pan,
-        }
-    }
+    //     return { 
+    //         expDate: account.expiry,
+    //         pan: account.pan,
+    //     }
+    // }
 
 
     async createMainCard(
@@ -53,11 +53,13 @@ export class VirtualCardService {
     ){
      
         const CVC = (Math.floor(Math.random() * 900) + 100).toString()
-        const account = await this.account(id)
-        const expiryDate = account.expDate
-       
-        const POStoken = this.jwtService.sign({ pan, expiry: expiryDate });
+          const account = await this.accountModel.findById(id).exec()
+        if ( ! account ) throw new NotFoundException('{virtual card} account not found')
+        const expiryDate = account.expiry
 
+        let POStoken = ''
+       
+        
         const card = await this.vcRepository.save(this.vcRepository.create({
 
             card_type: CARDTYPE.MAIN,
@@ -68,8 +70,21 @@ export class VirtualCardService {
             expiry: expiryDate,
             billing_address: '26, LONDON STREET, LEEDS, L20 3FX',
             POS_token: POStoken,
-
+            
         }));
+
+        POStoken = this.jwtService.sign({ 
+
+            pan: card.pan,
+            expiry: card.expiry,
+            customer:card.full_name,
+            account: account.id
+        });
+
+        card.POS_token = POStoken
+        await this.vcRepository.save(card)
+
+        console.log('card details',card)
 
         return card;
     }
@@ -85,11 +100,14 @@ export class VirtualCardService {
     ){
 
         const CVC = (Math.floor(Math.random() * 900) + 100).toString();
-        const account = await this.account(senderAccountId);
+
+        const account = await this.accountModel.findById(senderAccountId).exec()
+        if ( ! account ) throw new NotFoundException('{virtual card} account not found')
+
         const pan = account.pan;
+        let POStoken = ''
 
-        const POStoken = this.jwtService.sign({ pan, expiry: expiryDate });
-
+        
         const tempCard = await this.vcRepository.save(this.vcRepository.create({
             card_type: CARDTYPE.TEMP,
             full_name: fullName,
@@ -103,6 +121,17 @@ export class VirtualCardService {
             POS_token: POStoken,
         }));
 
+        POStoken = this.jwtService.sign({          
+          pan: tempCard.pan,
+          expiry: tempCard.expiry,
+          customer:tempCard.full_name,
+          account: account.id
+        });
+
+        tempCard.POS_token = POStoken
+        await this.vcRepository.save(tempCard)
+
+        console.log('card details',tempCard)
         return tempCard;
     }
 
@@ -136,18 +165,9 @@ export class VirtualCardService {
         throw new NotFoundException('Card not found');
     }
 
-    const qrPayload: CardDetails = {
-        card_type: card.card_type,
-        full_name: card.full_name,
-        pan: card.pan,
-        CVC: card.CVC,
-        account_number: card.account_number.toString(),
-        expiry: card.expiry,
-        billing_address: card.billing_address,
-        qr_token: card.POS_token,
-    };
+    const payload = `paycard://${card.POS_token}`;
 
-    return QRCode.toDataURL(JSON.stringify(qrPayload));
+    return QRCode.toDataURL(payload);
 }
     
 }

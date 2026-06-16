@@ -36,11 +36,12 @@ export class VirtualCardController {
     @Post('generate-qr-code')
         getQRCode(
             @Body() dataDto:{
-                token:string;
+                cardId:string;
             }
         ){
-            return this.virtualCardService.cardQRCode(dataDto.token)
+            return this.virtualCardService.cardQRCode(dataDto.cardId)
         }
+
 
     @Get('card/:id')
         getVirtualCard(@Param('id') id: string) {
