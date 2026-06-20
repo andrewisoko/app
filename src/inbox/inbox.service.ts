@@ -60,16 +60,21 @@ export class InboxService {
             return month + '/' + year;
         };
     
-    // async getReceivedContracts(inboxId: string): Promise<Contract[]> {
 
-    //     const contracts = await this.inboxRepository
-    //         .createQueryBuilder('ib')
-    //         .where('ib. LIKE :inboxId', { id: `%${inboxId}%` })
-    //         .getMany();
+        async updateSenderCreatedContract(username:string,condtractDecision:Contract){
+            const senderUser = await this.userRepository.findOne({where:{user_name: username}})
+            if(! senderUser) throw new NotFoundException("UPDATE CONTRACT SENDER USER inbox.service.ts: user not found")
+            
+                const lastCreatedContract = senderUser.created_contract.at(-1) ?? {}
+                const updateCreatedContract = senderUser.created_contract.map(item => 
+                item.id === lastCreatedContract.id
+                ? condtractDecision
+                : item
+                )
+                senderUser.created_contract = updateCreatedContract
 
-    //     return contracts;
-    // }
-
+                return await this.userRepository.save(senderUser)
+         }
 
 
     async getInbox(id: string): Promise<Inbox> {
@@ -148,18 +153,16 @@ export class InboxService {
     };
 
 
-    async ContractReceivedOnInbox( contractId: string, receiverIds: string, accepted:boolean ){
+    async ContractReceivedOnInbox( contractId: string, receiverAccountIds: string, accepted:boolean ){
 
         try {
+            
 
-            if (!contractId || !receiverIds) {
+            if (!contractId || !receiverAccountIds) {
                 throw new BadRequestException('contractId and receiverId are required');
             }
-            
-            
-           const receiverAccountUser = await this.accountModel.findOne({
-                customer: receiverIds,
-                }); 
+        
+           const receiverAccountUser = await this.accountModel.findById(receiverAccountIds).exec() 
             if (!receiverAccountUser) throw new NotFoundException('Receiver account not found');
               
             const receiverUser = await this.userRepository.findOne({
@@ -184,6 +187,7 @@ export class InboxService {
                     id: contractDecision.id,
                     sender: contractDecision.sender,
                     receiver: contractDecision.receiver,
+                    all_usernames:contractDecision.all_usernames,
                     split_agreement: contractDecision.split_agreement,
                     contract_status: contractDecision.contract_status,
                     time_agreement: contractDecision.time_agreement,
@@ -233,8 +237,14 @@ export class InboxService {
                         const expiryTime = Array.isArray(contractDecision.time_agreement)
                             ? String(contractDecision.time_agreement[1])
                             : this.parseTimeAgreement(contractDecision.time_agreement)[1] ?? '';
-                        const tempCard = await this.virtualCardService.createTempCard(fullName, expiryTime, contractDecision.sender, accNumber, accountUsers, tempExpiry);
-
+                        const tempCard = await this.virtualCardService.createTempCard(
+                            fullName,
+                            expiryTime, 
+                            contractDecision.sender, 
+                            accNumber, 
+                            accountUsers, 
+                            tempExpiry
+                        );
                         const defaultAccountId = tempCard.account_users[1];
                         await this.accountModel.findByIdAndUpdate(
                             defaultAccountId,
@@ -245,11 +255,14 @@ export class InboxService {
                         ).exec();
                         
                     }
-
+                    await this.updateSenderCreatedContract(contractDecision.all_usernames[0],contractDecision)
+                   
+                    
                     const gatewayUrl = this.configService.get<string>('CONTRACT_GATEWAY_URL');
                     if (!gatewayUrl) throw new NotFoundException('gateway url not found');
 
                     const contractKey = this.configService.get<string>('CONTRACT_KEY');
+
                     if (!contractKey) throw new NotFoundException('contractKey not found');
 
                     const bearerToken = this.createContractToken(
@@ -285,6 +298,7 @@ export class InboxService {
                             { headers: { Authorization: `Bearer ${bearerToken}` } },
                         ),
                     );
+
 
                     return {
                         message: 'Contract accepted and forwarded to gateway',
@@ -327,9 +341,11 @@ export class InboxService {
                     await this.userRepository.delete(accountDefaultReceiver.customer);
                     console.log("default user deleted");
 
-                    console.log(`All Default user ${ accountDefaultReceiver.customer } data succesfully deleted after contract declined`);
+                    console.log(`All Default user's ${ accountDefaultReceiver.customer } data succesfully deleted after contract declined`);
                    
                     await this.contractRepository.save(contractDecision)
+
+                    await this.updateSenderCreatedContract(contractDecision.all_usernames[0],contractDecision)
 
                     return {
                         message: 'Contract declined from new prospect receiver user',
@@ -339,9 +355,12 @@ export class InboxService {
                         gatewayResponse: null,
                     };
                 } else {
-                    
+                     await this.updateSenderCreatedContract(contractDecision.all_usernames[0],contractDecision)
+
                       await this.inboxRepository.save(inboxReceiver);
-                    //   await this.contractRepository.save(contractDecision)
+                      await this.contractRepository.save(contractDecision)
+
+                      
                       return {
                         message: 'Contract declined from receiver user',
                         contractId: contractDecision.id,
@@ -375,7 +394,6 @@ export class InboxService {
             },
             {
                 secret: contractKey,
-                expiresIn: '5m',
             },
         );
     }

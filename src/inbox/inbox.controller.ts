@@ -35,7 +35,7 @@ export class InboxController {
         ){
             return this.inboxService.ContractReceivedOnInbox(
                 dataDto.contractId,
-                dataDto.receiverIds,
+                dataDto.receiverAccountIds,
                 dataDto.accepted,
             )
         }

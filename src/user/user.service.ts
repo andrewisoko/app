@@ -54,7 +54,7 @@ export class UserService {
         
 
         const inbox = this.inboxRepository.create({ user: savedUser });
-        savedUser.accounts = [userAccount._id.toString()];
+        savedUser.account = userAccount._id.toString();
 
         const savedInbox = await this.inboxRepository.save(inbox);
 

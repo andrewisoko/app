@@ -8,7 +8,7 @@ export class ReceivedContractDto {
 
     @IsString()
     @IsNotEmpty()
-    receiverIds: string;
+    receiverAccountIds: string;
 
     @IsBoolean()
     accepted: boolean;

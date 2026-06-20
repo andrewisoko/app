@@ -8,6 +8,8 @@ export enum CARDTYPE {
         TEMP = 'temporary'
 }
 
+export type STATUS = |'active'| 'inactive' | 'expired'
+
 @Entity("virtual_card")
 export class VirtualCard {
 
@@ -28,7 +30,9 @@ export class VirtualCard {
                 pan:string;
         @Column()
                 account_number:number;
-
+                
+        @Column('varchar',{ array: true, length: 50, default: [] })
+                account_id:string[];
         @Column()
                 CVC: string;
         
@@ -41,11 +45,14 @@ export class VirtualCard {
         @Column({ type:'text', default: '26, LONDON STREET, LEEDS, L20 3FX' })
                 billing_address: string;
 
-        @Column({ type: 'simple-array', nullable: true })
-                account_users:string[]
+        @Column('varchar',{ array: true, length: 50, default: [] })
+                account_users:string[];
 
         @Column({ type: 'text', nullable: true })
                 POS_token: string;
+                
+        @Column({default:'active'})
+                status:STATUS
         
          @CreateDateColumn({ name: 'created_at' })
                 created_at: Date;

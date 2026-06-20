@@ -125,7 +125,7 @@ export class ContractService {
             });
 
             const savedDefaultUser = await this.userRepository.save(defaultUser);
-            contract.receiver = [savedDefaultUser.accounts[0]];
+            contract.receiver = [savedDefaultUser.account];
             
             const contractCreated = await this.createContract(contract);
 
@@ -158,11 +158,10 @@ export class ContractService {
                     if (!receiverAccount) throw new NotFoundException(`error at send contract level 404: receiver account not found — ${username}`);
                     confirmedUsers.push(receiverUser);
                     confirmedAccountIds.push(String(receiverAccount._id));
+
                 }
-    
                 const contractCreated = await this.createContract(contract);
                 contractCreated.sender = senderAccountId;
-
             
                 for (const receiverUser of confirmedUsers) {
                     
@@ -185,7 +184,6 @@ export class ContractService {
                 console.log('error at existing user / send contract level:',error)
                 throw new HttpException('Custom error message', HttpStatus.BAD_REQUEST);
             }
-
 
                return 'contract sent to receivers.'
         }

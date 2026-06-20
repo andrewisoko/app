@@ -35,11 +35,11 @@ export class VirtualCardController {
 
     @Post('generate-qr-code')
         getQRCode(
-            @Body() dataDto:{
-                cardId:string;
-            }
+            @Body() 
+                token:string
+            
         ){
-            return this.virtualCardService.cardQRCode(dataDto.cardId)
+            return this.virtualCardService.cardQRCode(token)
         }
 
 
@@ -48,8 +48,10 @@ export class VirtualCardController {
             return this.virtualCardService.getVirtualCard(id);
         }
 
-    @Get('account/:accountNumber')
-        getVirtualCards(@Param('accountNumber') accountNumber: string) {
-            return this.virtualCardService.getVirtualCards(Number(accountNumber));
+
+    @Post('bulk')
+        getBulkCards(@Body('accountId') accountId: string) {
+        return this.virtualCardService.getBulkCards(accountId);
         }
+
 }

@@ -7,6 +7,8 @@ import { AccountDocument } from 'src/account/document/account.doc';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import * as QRCode from 'qrcode';
+import { ConfigService } from '@nestjs/config';
+import { User } from 'src/user/entity/user.entity';
 
 export interface CardDetails{
 
@@ -22,14 +24,14 @@ export interface CardDetails{
 }
 
 
-
-
 @Injectable()
 export class VirtualCardService {
     constructor( 
         @InjectRepository(VirtualCard) private readonly vcRepository:Repository<VirtualCard>,
+        @InjectRepository(User)private readonly userRepository: Repository<User>,
         @InjectModel('Account') private readonly accountModel:Model<AccountDocument>,
         private readonly jwtService:JwtService,
+        private readonly configService: ConfigService,
 ){}
 
     // async account(id:string){
@@ -66,25 +68,28 @@ export class VirtualCardService {
             full_name: fullName,
             pan: pan,
             CVC: CVC,
+            account_id:[id],
             account_number:accounNumber,
             expiry: expiryDate,
             billing_address: '26, LONDON STREET, LEEDS, L20 3FX',
+            status:'active',
             POS_token: POStoken,
             
         }));
-
+      
         POStoken = this.jwtService.sign({ 
 
             pan: card.pan,
             expiry: card.expiry,
             customer:card.full_name,
             account: account.id
-        });
+        },{
+            secret: this.configService.get<string>('JWT_CARD_KEY'),
+        }
+    );
 
         card.POS_token = POStoken
         await this.vcRepository.save(card)
-
-        console.log('card details',card)
 
         return card;
     }
@@ -98,13 +103,17 @@ export class VirtualCardService {
         accountUsers: string[],
         expiryDate:string
     ){
-
+       
         const CVC = (Math.floor(Math.random() * 900) + 100).toString();
 
-        const account = await this.accountModel.findById(senderAccountId).exec()
-        if ( ! account ) throw new NotFoundException('{virtual card} account not found')
+        const senderAccount = await this.accountModel.findById(senderAccountId).exec()
+        if ( ! senderAccount ) throw new NotFoundException('{virtual card} account not found')
 
-        const pan = account.pan;
+        const receiverAccount = await this.accountModel.findById(accountUsers[1]).exec()
+        if ( ! receiverAccount ) throw new NotFoundException('{virtual card} account not found')
+
+
+        const pan = senderAccount.pan;
         let POStoken = ''
 
         
@@ -114,24 +123,39 @@ export class VirtualCardService {
             pan: pan,
             CVC: CVC,
             account_number:accountNumber,
+            account_id: accountUsers,
             expiry_time: expiryTime,
             expiry:expiryDate,
             billing_address: '26, LONGWAY ROAD, MANCHESTER, M13 19XD',
             account_users: accountUsers,
+            status:'active',
             POS_token: POStoken,
         }));
 
-        POStoken = this.jwtService.sign({          
+          POStoken = this.jwtService.sign({          
           pan: tempCard.pan,
           expiry: tempCard.expiry,
           customer:tempCard.full_name,
-          account: account.id
-        });
+          account: senderAccount.id
+        },{
+            secret: this.configService.get<string>('JWT_CARD_KEY'),
+        }
+    );
 
         tempCard.POS_token = POStoken
         await this.vcRepository.save(tempCard)
 
-        console.log('card details',tempCard)
+        await senderAccount.tempVirtualCard.push(tempCard.id)
+        await receiverAccount.tempVirtualCard.push(tempCard.id)
+
+    
+        await Promise.all([
+            senderAccount.save(),
+            receiverAccount.save(),
+        ]);
+
+
+        console.log('data saved',senderAccount.tempVirtualCard,receiverAccount.tempVirtualCard)
         return tempCard;
     }
 
@@ -142,30 +166,39 @@ export class VirtualCardService {
         return card;
     }
 
-    async getVirtualCards(accountNumber: number): Promise<VirtualCard[]> {
+   
+        async getBulkCards(accountId: string): Promise<VirtualCard[]> {
+            if (!accountId) {
+                return [];
+            }
 
-        const cards = await this.vcRepository.find({ 
-            where: { account_number: accountNumber } 
-        });
-        
-        if (!cards || cards.length === 0) {
-            throw new NotFoundException(`No virtual cards found for account ${accountNumber}`);
+            const account = await await this.accountModel.findById(accountId).exec()
+
+            if (!account) {
+                return [];
+            }
+
+            const cards: VirtualCard[] = [];
+
+            const mainCard = await this.vcRepository.findOne({where:{id:account.mainVirtualCard}}) 
+            if(!mainCard) throw new NotFoundException("Main card not found")
+
+            if (account.mainVirtualCard) {
+                cards.push(mainCard);
+            }
+
+            for( const tempCard of account.tempVirtualCard ){
+
+                const card = await this.vcRepository.findOne({where:{id:tempCard}}) 
+                if(! card) throw new NotFoundException(`Temp card ${card} not found`)
+                cards.push(card);
+            }
+            return cards;
         }
-        
-        return cards;
-    }
 
-    async cardQRCode(cardId: string): Promise<string> {
+    async cardQRCode(token: string): Promise<string> {
 
-    const card = await this.vcRepository.findOne({
-        where: { id: cardId }
-    });
-
-    if (!card) {
-        throw new NotFoundException('Card not found');
-    }
-
-    const payload = `paycard://${card.POS_token}`;
+        const payload = `paycard://${token}`;
 
     return QRCode.toDataURL(payload);
 }
