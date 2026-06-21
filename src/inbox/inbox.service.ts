@@ -245,15 +245,23 @@ export class InboxService {
                             accountUsers, 
                             tempExpiry
                         );
-                        const defaultAccountId = tempCard.account_users[1];
+                        const receiverAccountId = tempCard.account_users[1];
+
                         await this.accountModel.findByIdAndUpdate(
-                            defaultAccountId,
+                            receiverAccountId,
                             {
                                 $push: { tempVirtualCard: tempCard.id },
                                 $set: { expiry: tempExpiry },
                             },
                         ).exec();
-                        
+
+                        await this.accountModel.findByIdAndUpdate(
+                            senderAccount.id,
+                            {
+                                $push: { tempVirtualCard: tempCard.id },
+                                $set: { expiry: tempExpiry },
+                            },
+                        ).exec();                         
                     }
                     await this.updateSenderCreatedContract(contractDecision.all_usernames[0],contractDecision)
                    

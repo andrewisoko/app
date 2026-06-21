@@ -145,17 +145,12 @@ export class VirtualCardService {
         tempCard.POS_token = POStoken
         await this.vcRepository.save(tempCard)
 
-        await senderAccount.tempVirtualCard.push(tempCard.id)
-        await receiverAccount.tempVirtualCard.push(tempCard.id)
-
     
         await Promise.all([
             senderAccount.save(),
             receiverAccount.save(),
         ]);
 
-
-        console.log('data saved',senderAccount.tempVirtualCard,receiverAccount.tempVirtualCard)
         return tempCard;
     }
 
