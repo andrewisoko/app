@@ -7,8 +7,8 @@ export class Transaction {
     @PrimaryGeneratedColumn('uuid')
         id:string;
 
-    @Column('decimal', { precision: 6, scale: 2, default: 0 })
-        available_balance:number;
+    @Column('varchar', {length: 50 ,default:"TRANSACT RETAIL"})
+        merchant:string;
     
     @Column( 'varchar', {default:'PENDING'} )
         status:string;
@@ -17,9 +17,14 @@ export class Transaction {
         amount:number;
     
     @CreateDateColumn({ name:'timestamp' })
-         timestamp:Date
+        timestamp:Date
+    
+    @Column('varchar', { length:3, default:"GBP" })
+        currency:string;
 
-    @ManyToOne(() => Contract, contract => contract.transactions)
-    @JoinColumn({ name: 'contract_id' })
-        contract: Contract;
+    @ManyToOne(() => Contract, contract => contract.transactions,  {
+        nullable: true })
+
+    @JoinColumn({ name: 'contract_id',})
+        contract?: Contract;
 }

@@ -45,10 +45,7 @@ export class SignUpSignInService {
             secret: this.configService.get('JWT_REFRESH_SECRET'), 
             expiresIn: '7d' 
         });
-        
-        // user.refreshTokenHash = await bcrypt.hash(refreshToken, 10);
-        // user.refreshTokenExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-        // await this.userRepository.save(user);
+     
         
         return { access_token: accessToken, refresh_token: refreshToken };
         };

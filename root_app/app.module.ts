@@ -13,6 +13,8 @@ import { VirtualCard } from 'src/virtual_card/entity/virtual.card.entity';
 import { Contract } from 'src/contract/entity/contract.entity';
 import { Transaction } from 'src/transaction/entity/transaction.entity';
 import { Inbox } from 'src/inbox/entity/inbox.entity';
+import { TransactionModule } from 'src/transaction/transaction.module';
+
 
 @Module({
   imports: [
@@ -24,6 +26,7 @@ import { Inbox } from 'src/inbox/entity/inbox.entity';
       imports:[
         VirtualCardModule,
         UserModule,
+        TransactionModule,
       ],
       inject:[ConfigService],
       useFactory:(configService:ConfigService) => {

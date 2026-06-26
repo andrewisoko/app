@@ -16,7 +16,6 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { firstValueFrom } from 'rxjs';
 import { Account, AccountDocument } from 'src/account/document/account.doc';
-import { ObjectId } from 'typeorm/browser';
 import { VirtualCard } from 'src/virtual_card/entity/virtual.card.entity';
 import { VirtualCardService } from 'src/virtual_card/virtual.card.service';
 

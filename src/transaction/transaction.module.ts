@@ -12,7 +12,8 @@ import { Transaction } from './entity/transaction.entity';
         Contract,
         User,
         Transaction,
-      ]),
+
+      ])
     ],
   providers: [TransactionService],
   controllers: [TransactionController]

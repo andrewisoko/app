@@ -55,7 +55,9 @@ export class VirtualCardService {
     ){
      
         const CVC = (Math.floor(Math.random() * 900) + 100).toString()
-          const account = await this.accountModel.findById(id).exec()
+        const account = await this.accountModel.findById(id).exec()
+         const kafkaKey = 'TRANSACT' + '_' + crypto.randomUUID();
+
         if ( ! account ) throw new NotFoundException('{virtual card} account not found')
         const expiryDate = account.expiry
 
@@ -79,6 +81,7 @@ export class VirtualCardService {
       
         POStoken = this.jwtService.sign({ 
 
+            key: kafkaKey,
             pan: card.pan,
             expiry: card.expiry,
             customer:card.full_name,
@@ -106,6 +109,8 @@ export class VirtualCardService {
        
         const CVC = (Math.floor(Math.random() * 900) + 100).toString();
 
+        const kafkaKey = 'TRANSACT' + '_' + crypto.randomUUID();
+
         const senderAccount = await this.accountModel.findById(senderAccountId).exec()
         if ( ! senderAccount ) throw new NotFoundException('{virtual card} account not found')
 
@@ -132,7 +137,8 @@ export class VirtualCardService {
             POS_token: POStoken,
         }));
 
-          POStoken = this.jwtService.sign({          
+          POStoken = this.jwtService.sign({ 
+          key: kafkaKey,        
           pan: tempCard.pan,
           expiry: tempCard.expiry,
           customer:tempCard.full_name,
@@ -161,35 +167,35 @@ export class VirtualCardService {
         return card;
     }
 
-   
-        async getBulkCards(accountId: string): Promise<VirtualCard[]> {
-            if (!accountId) {
-                return [];
-            }
 
-            const account = await await this.accountModel.findById(accountId).exec()
-
-            if (!account) {
-                return [];
-            }
-
-            const cards: VirtualCard[] = [];
-
-            const mainCard = await this.vcRepository.findOne({where:{id:account.mainVirtualCard}}) 
-            if(!mainCard) throw new NotFoundException("Main card not found")
-
-            if (account.mainVirtualCard) {
-                cards.push(mainCard);
-            }
-
-            for( const tempCard of account.tempVirtualCard ){
-
-                const card = await this.vcRepository.findOne({where:{id:tempCard}}) 
-                if(! card) throw new NotFoundException(`Temp card ${card} not found`)
-                cards.push(card);
-            }
-            return cards;
+    async getBulkCards(accountId: string): Promise<VirtualCard[]> {
+        if (!accountId) {
+            return [];
         }
+
+        const account = await await this.accountModel.findById(accountId).exec()
+
+        if (!account) {
+            return [];
+        }
+
+        const cards: VirtualCard[] = [];
+
+        const mainCard = await this.vcRepository.findOne({where:{id:account.mainVirtualCard}}) 
+        if(!mainCard) throw new NotFoundException("Main card not found")
+
+        if (account.mainVirtualCard) {
+            cards.push(mainCard);
+        }
+
+        for( const tempCard of account.tempVirtualCard ){
+
+            const card = await this.vcRepository.findOne({where:{id:tempCard}}) 
+            if(! card) throw new NotFoundException(`Temp card ${card} not found`)
+            cards.push(card);
+        }
+        return cards;
+    }
 
     async cardQRCode(token: string): Promise<string> {
 

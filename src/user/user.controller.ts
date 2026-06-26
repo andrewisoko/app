@@ -16,7 +16,7 @@ import { LoginDto } from './signUp.signIn/loginDto';
 export class UserController {
     constructor( 
         private readonly userService:UserService,
-        private readonly signUpSingIn:SignUpSignInService,
+        private readonly signUpSignInService:SignUpSignInService,
 
     ){}
 
@@ -47,13 +47,11 @@ export class UserController {
                 })
             }
 
-    @Post('login')
-        async login(
-        @Body() loginDto:LoginDto
-        ){
-            const user = await this.signUpSingIn.validateUser(loginDto.email,loginDto.password)
-            return this.signUpSingIn.login(user)
-        }
+        @Post('login')
+            async login(@Body() dto: LoginDto) {
+            const user = await this.signUpSignInService.validateUser(dto.email, dto.password);
+            return this.signUpSignInService.login(user);
+            }
     
     @UseGuards(JwtAuthGuard,RolesGuard)
     @Roles(Role.ADMIN,Role.USER) 
