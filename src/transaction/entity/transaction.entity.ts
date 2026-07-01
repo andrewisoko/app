@@ -1,10 +1,10 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, JoinColumn } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, JoinColumn, PrimaryColumn } from "typeorm";
 import { Contract } from "src/contract/entity/contract.entity";
 
 @Entity("transaction")
 export class Transaction {
 
-    @PrimaryGeneratedColumn('uuid')
+    @PrimaryColumn()
         id:string;
 
     @Column('varchar', {length: 50 ,default:"TRANSACT RETAIL"})
@@ -24,7 +24,6 @@ export class Transaction {
 
     @ManyToOne(() => Contract, contract => contract.transactions,  {
         nullable: true })
-
     @JoinColumn({ name: 'contract_id',})
         contract?: Contract;
 }

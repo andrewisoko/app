@@ -5,9 +5,12 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from 'src/user/entity/user.entity';
 import { Contract } from 'src/contract/entity/contract.entity';
 import { Transaction } from './entity/transaction.entity';
+import { MongooseModule } from '@nestjs/mongoose';
+import { AccountSchema } from 'src/account/document/account.doc';
 
 @Module({
   imports:[
+      MongooseModule.forFeature([{ name:'Account', schema: AccountSchema }]),
       TypeOrmModule.forFeature([
         Contract,
         User,

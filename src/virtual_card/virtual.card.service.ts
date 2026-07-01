@@ -109,7 +109,7 @@ export class VirtualCardService {
        
         const CVC = (Math.floor(Math.random() * 900) + 100).toString();
 
-        const kafkaKey = 'TRANSACT' + '_' + crypto.randomUUID();
+        const transactionId = 'TRX' + '_' + crypto.randomUUID();
 
         const senderAccount = await this.accountModel.findById(senderAccountId).exec()
         if ( ! senderAccount ) throw new NotFoundException('{virtual card} account not found')
@@ -138,7 +138,7 @@ export class VirtualCardService {
         }));
 
           POStoken = this.jwtService.sign({ 
-          key: kafkaKey,        
+          trx_id: transactionId,        
           pan: tempCard.pan,
           expiry: tempCard.expiry,
           customer:tempCard.full_name,
