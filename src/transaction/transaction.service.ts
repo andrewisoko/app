@@ -19,17 +19,18 @@ export class TransactionService {
 
   async createTransactionFromNotification(data: {
 
-    trx_id:string
+    trxId:string;
     amount: number;
     status: string;
     currency: string;
     merchant: string;
     timestamp: string;
 
+
   }): Promise<Transaction> {
     const transaction = this.transactionRepository.create({
 
-      id:data.trx_id,
+      id:data.trxId,
       merchant: data.merchant,
       status: data.status,
       currency: data.currency,

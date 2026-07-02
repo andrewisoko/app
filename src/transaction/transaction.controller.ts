@@ -25,7 +25,7 @@ export class TransactionController {
     async handleNotification(
         @Body() data: {
         
-        trx_id: string;
+        key: string;
         message: string;
         customer: string;
         amount: number;
@@ -33,15 +33,17 @@ export class TransactionController {
         currency: string;
         merchant: string;
         timestamp: string;
+        trxId:string
+
     }) {
-        //  console.log('RAW PAYLOAD:', data);
-        if (!data.trx_id || !data.trx_id.startsWith('TRX_')) {
+         console.log('RAW PAYLOAD:', data);
+        if (!data.key || !data.key.startsWith('KEY_')) {
             return; 
         }
 
         await this.transactionService.createTransactionFromNotification({
            
-            trx_id: data.trx_id,
+            trxId: data.trxId,
             amount: data.amount,
             status: data.status,
             currency: data.currency,
