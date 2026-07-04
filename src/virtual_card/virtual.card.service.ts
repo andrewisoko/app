@@ -34,16 +34,6 @@ export class VirtualCardService {
         private readonly configService: ConfigService,
 ){}
 
-    // async account(id:string){
-
-    //     const account = await this.accountModel.findById(id).exec()
-    //     if ( ! account ) throw new NotFoundException('{virtual card} account not found')
-        
-    //     return { 
-    //         expDate: account.expiry,
-    //         pan: account.pan,
-    //     }
-    // }
 
 
     async createMainCard(

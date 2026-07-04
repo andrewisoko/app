@@ -50,11 +50,20 @@ export class TransactionService {
 
   async getTransactions (AccountId:string){
 
+    let userTransactions :Transaction[] = []
+
     const account = await this.accountModel.findById(AccountId).exec();
     if ( ! account ) throw new NotFoundException('{ Transaction } account not found');
 
-    console.log(account.transactions)
-    return account.transactions
+    for (const transactionId of account.transactions){
+  
+      const transaction = await this.transactionRepository.findOne({where:{ id: transactionId.toString()}})
+      if(! transaction) throw new NotFoundException('{transaction} transaction not found')
 
+      userTransactions.push(transaction)
+         
+    }
+
+    return userTransactions
   }
 }

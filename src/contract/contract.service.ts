@@ -1,4 +1,4 @@
-import { BadRequestException, HttpException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, HttpException, HttpStatus, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { Contract, SPLIT_AGREEMENT, CONTRACT_STATUS, CONTRACT_TYPE } from './entity/contract.entity';
 import { Transaction } from 'src/transaction/entity/transaction.entity';
 import { Role, User } from 'src/user/entity/user.entity';
@@ -154,6 +154,7 @@ export class ContractService {
                   
                     const receiverUser = await this.userRepository.findOne({ where: { user_name: username } });
                     if (!receiverUser) throw new NotFoundException(`error at send contract level 404: receiver user not found — ${username}`);
+                    if (receiverUser.user_name === contract.sender ) throw new UnauthorizedException(`error at send contract level identical sender/user `)
                     const receiverAccount = await this.accountModel.findOne({ customer: receiverUser.id }).exec();
                     if (!receiverAccount) throw new NotFoundException(`error at send contract level 404: receiver account not found — ${username}`);
                     confirmedUsers.push(receiverUser);
@@ -171,7 +172,9 @@ export class ContractService {
                     await this.inboxService.postInbox(contractCreated, receiverUser);
                    
                     if(senderUser.recipients.includes(receiverUser.user_name) 
-                      || senderUser.user_name === receiverUser.user_name){}else{
+                      || senderUser.user_name === receiverUser.user_name ||
+                     receiverUser.user_name === null
+                    ){}else{
                       senderUser.recipients.push(receiverUser.user_name);    
                     }
                     senderUser.created_contract.push(contractCreated);
