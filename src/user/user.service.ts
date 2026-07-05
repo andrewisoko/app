@@ -37,7 +37,7 @@ export class UserService {
         return await this.userRepository.findOneBy({email})
     }
 
-    async createUser(data:Partial<User>){
+    async createUser(data:Partial<User>, initialBalance?:number){
 
         
         const user = this.userRepository.create(data);
@@ -47,7 +47,7 @@ export class UserService {
 
         const userAccount = await this.accountService.createAccount(
             'GBP',
-            200,
+            initialBalance ?? 0,
             savedUser.user_name,
             fullName
             );

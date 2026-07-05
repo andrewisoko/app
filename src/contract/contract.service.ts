@@ -1,5 +1,5 @@
 import { BadRequestException, HttpException, HttpStatus, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
-import { Contract, SPLIT_AGREEMENT, CONTRACT_STATUS, CONTRACT_TYPE } from './entity/contract.entity';
+import { Contract, SPLIT_AGREEMENT, CONTRACT_STATUS, RECEIVER_TYPE } from './entity/contract.entity';
 import { Transaction } from 'src/transaction/entity/transaction.entity';
 import { Role, User } from 'src/user/entity/user.entity';
 import { UserService } from 'src/user/user.service';
@@ -12,8 +12,18 @@ import { InjectModel } from '@nestjs/mongoose';
 import { AccountDocument } from 'src/account/document/account.doc';
 import { Model } from 'mongoose';
 import * as QRCode from 'qrcode';
+import { ConfigService } from '@nestjs/config';
+import { firstValueFrom } from 'rxjs';
+import { JwtService } from '@nestjs/jwt';
+import { HttpService } from '@nestjs/axios';
 
 
+type Decision = "accepted" | "declined";
+
+interface ContractDecisionState {  //Object 1
+    participants: number;
+    decisions: Map<string, Decision>;
+}
 
 
 
@@ -41,9 +51,116 @@ export class ContractService {
         @InjectRepository( Contract ) private readonly contractRepository: Repository<Contract>,
         @InjectRepository( User ) private readonly userRepository:Repository<User>,
         @InjectModel('Account') private readonly accountModel:Model<AccountDocument>,
+        private readonly contractDecisions = new Map<string,ContractDecisionState>(), //object 2
+        private readonly jwtService: JwtService,
+        private readonly httpService:HttpService,
+        private readonly configService:ConfigService,
         private readonly userService: UserService,
         private readonly inboxService: InboxService,
- ){}
+        
+    ){}
+
+
+    //////////////////////////////////////
+    //////////////////////////////////////
+    /////////SET UP FUNCTIONS/////////////
+    //////////////////////////////////////
+    //////////////////////////////////////
+
+    
+    private createContractToken(
+        contractKey: string,
+        contractId: string,
+        role:string
+    ) {
+        return this.jwtService.sign(
+            {
+                contractId,
+                role,
+            },
+            {
+                secret: contractKey,
+            },
+        );
+    }
+
+    async sendToContractServer(contractId:string){
+
+        const contract = await this.contractRepository.findOne({ where: { id:contractId } });
+        if (!contract) throw new NotFoundException(`{ sent to server } Contract with id ${contractId} not found`);
+        
+        const gatewayUrl = this.configService.get<string>('CONTRACT_GATEWAY_URL');
+        if (!gatewayUrl) throw new NotFoundException('gateway url not found');
+
+        const contractKey = this.configService.get<string>('CONTRACT_KEY') ?? '';
+           const bearerToken = this.createContractToken(
+                contractKey,
+                contractId,
+                'CONTRACT'
+            );
+            const response = await firstValueFrom(
+                this.httpService.post(
+                    gatewayUrl,
+                    {
+                    contract
+                    },
+                    { headers: { Authorization: `Bearer ${bearerToken}` } },
+                ),
+            );
+        
+            return {
+                message: 'Contract accepted and forwarded to gateway',
+                contractId: contractId,
+                contractStatus: contract.contract_status,
+                forwardedTo: gatewayUrl,
+                gatewayResponse: response.data,
+            };
+    }
+    
+    async receiverFinalAgreement(
+        contractId: string,
+        receiverId: string,
+        participants: number,
+        decision: Decision,
+    ) {
+
+        // expression to set object
+        if (!this.contractDecisions.has(contractId)) {
+
+            this.contractDecisions.set(contractId, {
+                participants,
+                decisions: new Map(),
+            });
+
+        }
+
+        const contract = this.contractDecisions.get(contractId)!;
+        contract.decisions.set(receiverId, decision);
+
+        if (contract.decisions.size < participants - 1) {
+            return;
+        }
+        const hasDeclined = [...contract.decisions.values()]
+            .includes("declined");
+
+        if (hasDeclined) {
+
+            console.log("Contract rejected.");
+
+            // cleanup to offload memory
+            this.contractDecisions.delete(contractId);
+
+            return;
+
+        }
+
+        console.log("All receivers accepted.");
+
+        await this.sendToContractServer(contractId);
+        this.contractDecisions.delete(contractId);
+  
+    }
+
 
     async getContract(id: string): Promise<Contract> {
 
@@ -51,6 +168,15 @@ export class ContractService {
         if (!contract) throw new NotFoundException(`Contract with id ${id} not found`);
         return contract;
     }
+
+
+    ////////////////////////////////
+    ////////////////////////////////
+    /////// MAIN FUNCTIONS//////////
+    ////////////////////////////////
+    ////////////////////////////////
+
+
 
     async createContract(
         contract: Partial<contractProps>,
@@ -111,37 +237,38 @@ export class ContractService {
         if ( !contract.receiver || contract.receiver.length === 0 ) { // create default account for then confirm it 
 
             const randomFour = Math.floor(Math.random() * 90000) + 10000;
-            const password = crypto.randomUUID();
+            // const password = crypto.randomUUID();
 
             const defaultUser = await this.userService.createUser({
                 role: Role.USER,
-                name: registerDto.name,
-                surname: registerDto.surname,
+                name: 'DEFAULT',
+                surname: 'USER',
                 user_name: `default_user${randomFour}`,
                 mobile_number: registerDto.mobileNumber,
                 user_type: UserType.DEFAULT,
                 email: registerDto.email,
-                password: password,
-            });
+                password: 'hashedpassword',
+            }
+        );
 
             const savedDefaultUser = await this.userRepository.save(defaultUser);
             contract.receiver = [savedDefaultUser.account];
             
             const contractCreated = await this.createContract(contract);
 
-            contractCreated.contract_type = CONTRACT_TYPE.ONE_TIME;
+            contractCreated.receiver_type = RECEIVER_TYPE.ONE_TIME;
             await this.contractRepository.save(contractCreated)
 
-            console.log('contract type',contractCreated.contract_type)
+            // console.log('contract type',contractCreated.contract_type)
             await this.inboxService.postInbox(contractCreated, savedDefaultUser);
 
             const qrUrl = `http://localhost:3100/contract/receiver-inbox-contract?contractId=${contractCreated.id}&defaultUserId=${savedDefaultUser.id}`;
             const qrCode = await QRCode.toDataURL(qrUrl);
 
-            console.log('QR code generated for default user contract link:', qrUrl);
-            console.log('QR code (base64):', qrCode);
+            // console.log('QR code generated for default user contract link:', qrUrl);
+            // console.log('QR code (base64):', qrCode);
 
-            return 'contract sent to default account.'
+            return qrCode
 
         } else { // already existing accounts 
 

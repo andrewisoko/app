@@ -10,9 +10,14 @@ import { UserModule } from 'src/user/user.module';
 import { InboxModule } from 'src/inbox/inbox.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AccountSchema } from 'src/account/document/account.doc';
+import { ConfigService } from '@nestjs/config';
+import { HttpModule } from '@nestjs/axios';
+import { JwtModule } from '@nestjs/jwt';
 
 @Module({
   imports:[
+    HttpModule,
+    JwtModule.register({}),
     MongooseModule.forFeature([{ name: 'Account', schema: AccountSchema }]),
     TypeOrmModule.forFeature([
       Contract,
@@ -26,6 +31,7 @@ import { AccountSchema } from 'src/account/document/account.doc';
   controllers: [ContractController],
   providers: [
     ContractService,
+    ConfigService
   ]
 })
 export class ContractModule {}

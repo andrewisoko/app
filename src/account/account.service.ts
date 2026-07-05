@@ -7,6 +7,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { VirtualCardService } from 'src/virtual_card/virtual.card.service';
 import { VirtualCard } from 'src/virtual_card/entity/virtual.card.entity';
+import { Transaction } from 'src/transaction/entity/transaction.entity';
+
 
 
 @Injectable()
@@ -15,6 +17,7 @@ export class AccountService {
         @InjectModel('Account') private accountModel: Model<AccountDocument>,
         @InjectRepository(User) private userRepository:Repository<User>,
         @InjectRepository(VirtualCard) private virtualCardRepository:Repository<VirtualCard>,
+        @InjectRepository(Transaction) private transactionRepository:Repository<Transaction>,
         private readonly virtualCardService:VirtualCardService,
     ){}
 
@@ -115,7 +118,7 @@ export class AccountService {
 
     async deleteAccount(accountId: string, password: string, username: string) {
         const account = await this.accountModel.findById(accountId).exec();
-        if (!account) throw new NotFoundException("account not found");
+        if (!account) throw new NotFoundException("{delete account} account not found");
 
         const user = await this.userRepository.findOne({ where: { user_name: username } });
         if (!user || account.customer.toString() !== user.id) {
@@ -126,6 +129,48 @@ export class AccountService {
         if (account.status === "Pending") throw new UnauthorizedException("Account still pending.");
 
         return this.accountModel.findByIdAndDelete(accountId).exec();
+    }
+
+    async topUp(id: string, amount: number) {
+
+        const trxId = 'TRX/'+ crypto.randomUUID()
+        const timestamp = new Date( Date.now())
+
+  
+        const account = await this.accountModel.findByIdAndUpdate(
+            id,
+            {
+                $inc: {
+                    ledger_balance: amount,
+                    available_balance: amount,
+                },
+            },   
+            { new: true }
+        );
+
+        if (!account) {
+            throw new NotFoundException('{top up} account not found');
+        }
+
+        const trxCreated = await this.transactionRepository.create({
+            id:trxId,
+            type:'TOPUP',
+            merchant:'TRANSACT TECHNOLOGIES INC',
+            status:'APPROVED',
+            amount:amount,
+            timestamp:timestamp,
+            currency:'GBP'
+
+        })
+
+        await this.transactionRepository.save(trxCreated)
+
+        await this.accountModel.updateOne(
+            { _id: id },
+            { $push: { transactions: trxCreated.id } }
+        );
+
+        return account;
     }
 }
 

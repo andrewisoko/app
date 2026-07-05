@@ -10,7 +10,7 @@ import { Repository } from 'typeorm';
 import { Model } from 'mongoose';
 import { Inbox } from './entity/inbox.entity';
 import { User } from 'src/user/entity/user.entity';
-import { Contract, CONTRACT_STATUS, CONTRACT_TYPE } from 'src/contract/entity/contract.entity';
+import { Contract, CONTRACT_STATUS, RECEIVER_TYPE } from 'src/contract/entity/contract.entity';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
@@ -151,6 +151,10 @@ export class InboxService {
         
     };
 
+    QrCodeAcceptedContract(){
+
+    }
+
 
     async ContractReceivedOnInbox( contractId: string, receiverAccountIds: string, accepted:boolean ){
 
@@ -217,11 +221,13 @@ export class InboxService {
                 //  User decision   //
                 //------------------//
 
-                if (accepted === true) {
+                
+
+                if (accepted === true ){
 
                     await this.inboxRepository.save(inboxReceiver);
                      
-                    contract.contract_type = CONTRACT_TYPE.EXISTING_USER;
+                    contract.contract_type = RECEIVER_TYPE.EXISTING_USER;
                     await this.contractRepository.save(contract);
 
                     // Build temp card for all contract participants
@@ -315,7 +321,7 @@ export class InboxService {
                         gatewayResponse: response.data,
                     };
 
-                } else if( accepted === false && contract.contract_type === CONTRACT_TYPE.ONE_TIME ){
+                } else if( accepted === false && contract.contract_type === RECEIVER_TYPE.ONE_TIME ){
 
                     await this.inboxRepository.save(inboxReceiver);
                     const accountDefaultReceiver = await this.accountModel.findById(contract.receiver[0]).exec();

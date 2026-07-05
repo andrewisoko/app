@@ -46,7 +46,7 @@ export class VirtualCardService {
      
         const CVC = (Math.floor(Math.random() * 900) + 100).toString()
         const account = await this.accountModel.findById(id).exec()
-        const cardTransactionsKey = 'KEY' + '_' + crypto.randomUUID();
+        const cardTransactionsKey = 'KEY_'+ crypto.randomUUID();
 
         if ( ! account ) throw new NotFoundException('{virtual card} account not found')
         const expiryDate = account.expiry
@@ -99,7 +99,7 @@ export class VirtualCardService {
        
         const CVC = (Math.floor(Math.random() * 900) + 100).toString();
 
-        const cardTransactionsKey = 'KEY' + '_' + crypto.randomUUID();
+        const cardTransactionsKey = 'KEY_'+ crypto.randomUUID();
 
         const senderAccount = await this.accountModel.findById(senderAccountId).exec()
         if ( ! senderAccount ) throw new NotFoundException('{virtual card} account not found')

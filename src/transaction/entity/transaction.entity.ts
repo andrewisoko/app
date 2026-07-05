@@ -1,12 +1,16 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, JoinColumn, PrimaryColumn } from "typeorm";
 import { Contract } from "src/contract/entity/contract.entity";
 
+export type TRANSACTION_TYPE = 'CONTACTLESS-CONTRACT' | 'CONTACTLESS' | 'TOPUP'
 @Entity("transaction")
 export class Transaction {
 
     @PrimaryColumn()
         id:string;
 
+    @Column({ default: 'CONTACTLESS'})
+         type:TRANSACTION_TYPE
+         
     @Column('varchar', {length: 50 ,default:"TRANSACT RETAIL"})
         merchant:string;
     

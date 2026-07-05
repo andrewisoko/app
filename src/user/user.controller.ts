@@ -26,15 +26,16 @@ export class UserController {
 
     @Post('register')
          async createUser(
-            @Body() registerDto:RegisterDto
+            @Body() registerDto:RegisterDto,
+                    initialBalance:number,
             ): Promise<User> {
                 
                 const hashedpassword = await bcrypt.hash( registerDto.password,10 );
                 const randomFour = Math.floor(Math.random() * 90000) + 10000;
                 const userName = registerDto.name.slice( 0,3 ) + registerDto.surname + randomFour.toString();
 
-               
                 const mobileNumber = registerDto.mobile_number ?? registerDto.mobileNumber;
+
                 return this.userService.createUser({
                     role:Role.USER,
                     user_type:UserType.COMPETED,
@@ -43,8 +44,9 @@ export class UserController {
                     mobile_number:mobileNumber,
                     user_name:userName,
                     email:registerDto.email,
-                    password:hashedpassword,
-                })
+                    password:hashedpassword
+                }, initialBalance   
+                )
             }
 
         @Post('login')

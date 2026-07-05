@@ -16,9 +16,9 @@ export enum CONTRACT_STATUS {
     PENDING = 'pending',
 }
 
-export enum CONTRACT_TYPE {
-    ONE_TIME = "one_time",
-    EXISTING_USER = "existing_user"
+export enum RECEIVER_TYPE {
+    ONE_TIME = "new-user",
+    EXISTING_USER = "existing-user"
 }
 
 @Entity('contract')
@@ -27,14 +27,17 @@ export class Contract {
     @PrimaryGeneratedColumn('uuid')
         id: string;
 
-    @Column({ type: 'enum', enum: CONTRACT_TYPE, default:CONTRACT_TYPE.EXISTING_USER })
-        contract_type:CONTRACT_TYPE;
+    @Column()
+        participants:number;
+
+    @Column({ type: 'enum', enum: RECEIVER_TYPE, default:RECEIVER_TYPE.EXISTING_USER })
+        receiver_type:RECEIVER_TYPE;
 
     @Column({ type: 'varchar' })
         sender: string;
 
     @Column({ type: 'simple-array' })
-        receiver: string[];
+        receiver: string | null [];
 
     @Column({ type: 'simple-array' })
         all_usernames: string[];

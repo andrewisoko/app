@@ -56,5 +56,15 @@ export class AccountController {
             dataDto.accountId
         )
     }
+
+    @Post('top-up')
+    topUp(
+        @Body() dataDto: { id:string , amount:number }
+    ){
+        return this.accountService.topUp(
+            dataDto.id, dataDto.amount
+        )
+    }
+
     
 }

@@ -7,11 +7,12 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from 'src/user/entity/user.entity';
 import { VirtualCard } from 'src/virtual_card/entity/virtual.card.entity';
 import { VirtualCardModule } from 'src/virtual_card/virtual.card.module';
+import { Transaction } from 'src/transaction/entity/transaction.entity';
 
 @Module({
     imports: [
         MongooseModule.forFeature([{ name: 'Account', schema: AccountSchema }]),
-        TypeOrmModule.forFeature([User,VirtualCard]),
+        TypeOrmModule.forFeature([User,VirtualCard,Transaction]),
         VirtualCardModule,
     ],
     controllers: [AccountController],
