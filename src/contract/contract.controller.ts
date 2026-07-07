@@ -19,23 +19,23 @@ import { Contract } from './entity/contract.entity';
                 return this.contractService.getContract(id);
             }
         
-        @Post('create-contract')
-            createContract(
-                @Body() contractData: Partial<contractProps>,
+        // @Post('create-contract')
+        //     createContract(
+        //         @Body() contractData: Partial<contractProps>,
               
-            ): Promise<Contract> {
-                return this.contractService.createContract(
-                    contractData,
+        //     ): Promise<Contract> {
+        //         return this.contractService.createContract(
+        //             contractData,
 
-                );
-            }
+        //         );
+        //     }
         
-        @Post('send-contract')  
-            sendContract(
-                @Body() dataDto: contractProps & Partial<RegisterDto>
-            ): Promise<string> {
-                return this.contractService.sendContract(dataDto,dataDto)
-            }
+        // @Post('send-contract')  
+        //     sendContract(
+        //         @Body() dataDto: contractProps & Partial<RegisterDto>
+        //     ): Promise<string> {
+        //         return this.contractService.sendContract(dataDto,dataDto)
+        //     }
         
         @Post('receiver-inbox-contract')
             ContractReceivedOnInbox(

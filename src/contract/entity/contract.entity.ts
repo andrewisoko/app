@@ -37,7 +37,7 @@ export class Contract {
         sender: string;
 
     @Column({ type: 'simple-array' })
-        receiver: string | null [];
+        receiver: string[];
 
     @Column({ type: 'simple-array' })
         all_usernames: string[];

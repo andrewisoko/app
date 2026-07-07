@@ -13,6 +13,10 @@ import { AccountSchema } from 'src/account/document/account.doc';
 import { ConfigService } from '@nestjs/config';
 import { HttpModule } from '@nestjs/axios';
 import { JwtModule } from '@nestjs/jwt';
+import { CONTRACT_DECISIONS } from './contract.service';
+import { ContractDecisionState } from './contract.service';
+
+
 
 @Module({
   imports:[
@@ -27,11 +31,16 @@ import { JwtModule } from '@nestjs/jwt';
     ]),
     UserModule,
     InboxModule,
+
   ],
   controllers: [ContractController],
   providers: [
     ContractService,
-    ConfigService
+    ConfigService,
+       {
+      provide: CONTRACT_DECISIONS,
+      useValue: new Map<string, ContractDecisionState>(),
+    },
   ]
 })
 export class ContractModule {}

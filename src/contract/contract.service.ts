@@ -16,16 +16,18 @@ import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
 import { JwtService } from '@nestjs/jwt';
 import { HttpService } from '@nestjs/axios';
+import { Inject } from '@nestjs/common';
+
 
 
 type Decision = "accepted" | "declined";
 
-interface ContractDecisionState {  //Object 1
+export interface ContractDecisionState { //object 1
     participants: number;
     decisions: Map<string, Decision>;
 }
 
-
+export const CONTRACT_DECISIONS = "CONTRACT_DECISIONS";
 
 export interface contractProps{
 
@@ -51,7 +53,8 @@ export class ContractService {
         @InjectRepository( Contract ) private readonly contractRepository: Repository<Contract>,
         @InjectRepository( User ) private readonly userRepository:Repository<User>,
         @InjectModel('Account') private readonly accountModel:Model<AccountDocument>,
-        private readonly contractDecisions = new Map<string,ContractDecisionState>(), //object 2
+          @Inject(CONTRACT_DECISIONS)
+        private readonly contractDecisions: Map<string, ContractDecisionState>,
         private readonly jwtService: JwtService,
         private readonly httpService:HttpService,
         private readonly configService:ConfigService,

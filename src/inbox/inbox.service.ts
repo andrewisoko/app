@@ -156,16 +156,17 @@ export class InboxService {
     }
 
 
-    async ContractReceivedOnInbox( contractId: string, receiverAccountIds: string, accepted:boolean ){
+    async ContractReceivedOnInbox( contractId: string, receiverAccountId: string, accepted:boolean ){
 
         try {
             
 
-            if (!contractId || !receiverAccountIds) {
+            if (!contractId || !receiverAccountId) {
                 throw new BadRequestException('contractId and receiverId are required');
             }
+
         
-           const receiverAccountUser = await this.accountModel.findById(receiverAccountIds).exec() 
+           const receiverAccountUser = await this.accountModel.findById(receiverAccountId).exec() 
             if (!receiverAccountUser) throw new NotFoundException('Receiver account not found');
               
             const receiverUser = await this.userRepository.findOne({
@@ -226,8 +227,7 @@ export class InboxService {
                 if (accepted === true ){
 
                     await this.inboxRepository.save(inboxReceiver);
-                     
-                    contract.contract_type = RECEIVER_TYPE.EXISTING_USER;
+                    contract.receiver_type = RECEIVER_TYPE.EXISTING_USER;
                     await this.contractRepository.save(contract);
 
                     // Build temp card for all contract participants
@@ -321,7 +321,7 @@ export class InboxService {
                         gatewayResponse: response.data,
                     };
 
-                } else if( accepted === false && contract.contract_type === RECEIVER_TYPE.ONE_TIME ){
+                } else if( accepted === false && contract.receiver_type === RECEIVER_TYPE.ONE_TIME ){
 
                     await this.inboxRepository.save(inboxReceiver);
                     const accountDefaultReceiver = await this.accountModel.findById(contract.receiver[0]).exec();
