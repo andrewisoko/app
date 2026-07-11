@@ -13,7 +13,9 @@ import { VirtualCard } from 'src/virtual_card/entity/virtual.card.entity';
 import { Contract } from 'src/contract/entity/contract.entity';
 import { Transaction } from 'src/transaction/entity/transaction.entity';
 import { Inbox } from 'src/inbox/entity/inbox.entity';
+import { Notification } from 'src/notification/entity/notification.entity';
 import { TransactionModule } from 'src/transaction/transaction.module';
+import { NotificationModule } from 'src/notification/notification.module';
 
 
 @Module({
@@ -44,7 +46,8 @@ import { TransactionModule } from 'src/transaction/transaction.module';
           VirtualCard,
           Contract,
           Transaction,
-          Inbox
+          Inbox,
+          Notification
         ]
         }
       }
@@ -60,7 +63,7 @@ import { TransactionModule } from 'src/transaction/transaction.module';
     }),
     AccountModule,
     ContractModule,
-    
+    NotificationModule,
     ],
   controllers: [AppController],
   providers: [AppService],

@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany, OneToOne } from 'typeorm';
+import { Entity, PrimaryColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany, OneToOne } from 'typeorm';
 import { Transaction } from 'src/transaction/entity/transaction.entity';
 import { Inbox } from 'src/inbox/entity/inbox.entity';
 
@@ -16,22 +16,22 @@ export enum CONTRACT_STATUS {
     PENDING = 'pending',
 }
 
-export enum RECEIVER_TYPE {
-    ONE_TIME = "new-user",
-    EXISTING_USER = "existing-user"
+export enum CONTRACT_TYPE {
+    WITH_NEW_USER = "with-new-user",
+    EXISTING_USERS = "existing-user"
 }
 
 @Entity('contract')
 export class Contract {
 
-    @PrimaryGeneratedColumn('uuid')
+    @PrimaryColumn()
         id: string;
 
     @Column()
         participants:number;
 
-    @Column({ type: 'enum', enum: RECEIVER_TYPE, default:RECEIVER_TYPE.EXISTING_USER })
-        receiver_type:RECEIVER_TYPE;
+    @Column({ type: 'enum', enum: CONTRACT_TYPE, default:CONTRACT_TYPE.EXISTING_USERS })
+        contract_type   :CONTRACT_TYPE;
 
     @Column({ type: 'varchar' })
         sender: string;

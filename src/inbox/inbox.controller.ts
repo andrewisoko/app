@@ -30,13 +30,13 @@ export class InboxController {
         }
 
     @Post('receiver-inbox-contract')
-        receivedContractOnInbox(
+        contractInbox(
             @Body() dataDto: ReceivedContractDto
         ){
-            return this.inboxService.ContractReceivedOnInbox(
+            return this.inboxService.ContractInbox(
                 dataDto.contractId,
-                dataDto.receiverAccountIds,
-                dataDto.accepted,
+                dataDto.receiverAccountId,
+                dataDto.decision,
             )
         }
 

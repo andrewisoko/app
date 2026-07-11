@@ -12,6 +12,8 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { AccountSchema } from 'src/account/document/account.doc';
 import { VirtualCard } from 'src/virtual_card/entity/virtual.card.entity';
 import { VirtualCardService } from 'src/virtual_card/virtual.card.service';
+import { ContractService } from 'src/contract/contract.service';
+import { NotificationService } from 'src/notification/notification.service';
 
 @Module({
   imports: [
@@ -27,7 +29,12 @@ import { VirtualCardService } from 'src/virtual_card/virtual.card.service';
     ]),
   ],
   controllers: [InboxController],
-  providers: [InboxService, VirtualCardService],
+  providers: [
+    InboxService,
+     VirtualCardService,
+     ContractService,
+     NotificationService
+    ],
   exports: [InboxService],
 })
 export class InboxModule {}

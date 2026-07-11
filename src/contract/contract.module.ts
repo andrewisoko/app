@@ -8,6 +8,7 @@ import { User } from 'src/user/entity/user.entity';
 import { Inbox } from 'src/inbox/entity/inbox.entity';
 import { UserModule } from 'src/user/user.module';
 import { InboxModule } from 'src/inbox/inbox.module';
+import { NotificationModule } from 'src/notification/notification.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AccountSchema } from 'src/account/document/account.doc';
 import { ConfigService } from '@nestjs/config';
@@ -15,6 +16,7 @@ import { HttpModule } from '@nestjs/axios';
 import { JwtModule } from '@nestjs/jwt';
 import { CONTRACT_DECISIONS } from './contract.service';
 import { ContractDecisionState } from './contract.service';
+import { VirtualCardService } from 'src/virtual_card/virtual.card.service';
 
 
 
@@ -31,12 +33,14 @@ import { ContractDecisionState } from './contract.service';
     ]),
     UserModule,
     InboxModule,
+    NotificationModule,
 
   ],
   controllers: [ContractController],
   providers: [
     ContractService,
     ConfigService,
+    VirtualCardService,
        {
       provide: CONTRACT_DECISIONS,
       useValue: new Map<string, ContractDecisionState>(),

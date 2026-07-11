@@ -1,22 +1,21 @@
 import { BadRequestException, HttpException, HttpStatus, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
-import { Contract, SPLIT_AGREEMENT, CONTRACT_STATUS, RECEIVER_TYPE } from './entity/contract.entity';
-import { Transaction } from 'src/transaction/entity/transaction.entity';
+import { Contract, SPLIT_AGREEMENT, CONTRACT_STATUS, CONTRACT_TYPE } from './entity/contract.entity';
 import { Role, User } from 'src/user/entity/user.entity';
 import { UserService } from 'src/user/user.service';
-import { RegisterDto } from 'src/user/signUp.signIn/registerDto';
 import { UserType } from 'src/user/entity/user.entity';
 import { InboxService } from 'src/inbox/inbox.service';
+import { NotificationService } from 'src/notification/notification.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { InjectModel } from '@nestjs/mongoose';
 import { AccountDocument } from 'src/account/document/account.doc';
 import { Model } from 'mongoose';
-import * as QRCode from 'qrcode';
 import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
 import { JwtService } from '@nestjs/jwt';
 import { HttpService } from '@nestjs/axios';
 import { Inject } from '@nestjs/common';
+import { VirtualCardService } from 'src/virtual_card/virtual.card.service';
 
 
 
@@ -30,7 +29,8 @@ export interface ContractDecisionState { //object 1
 export const CONTRACT_DECISIONS = "CONTRACT_DECISIONS";
 
 export interface contractProps{
-
+    id:string
+    participants:number
     sender: string,
     receiver: string[],
     all_usernames: string[]
@@ -60,6 +60,8 @@ export class ContractService {
         private readonly configService:ConfigService,
         private readonly userService: UserService,
         private readonly inboxService: InboxService,
+        private readonly notificationService: NotificationService,
+        private readonly virtualCardService: VirtualCardService
         
     ){}
 
@@ -69,6 +71,45 @@ export class ContractService {
     /////////SET UP FUNCTIONS/////////////
     //////////////////////////////////////
     //////////////////////////////////////
+
+        
+    private parseTimeAgreement(value: any): string[] {
+        if (Array.isArray(value)) return value;
+        if (typeof value === 'string') {
+            // PostgreSQL array literal: {"val1","val2"}
+            const match = value.match(/^\{(.*)\}$/s);
+            if (match) {
+                return match[1]
+                    .split(',')
+                    .map(s => s.replace(/^"|"$/g, '').trim())
+                    .filter(Boolean);
+            }
+            return value.split(',').map(s => s.trim()).filter(Boolean);
+        }
+        return [];
+        };
+    
+    private createTempExpiry(expiry: string | Date){
+        const date = new Date(expiry);
+        const year = date.getFullYear().toString().slice(2, 4);
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        return month + '/' + year;
+    };
+
+            async updateSenderCreatedContract(username:string,condtractDecision:Contract){
+            const senderUser = await this.userRepository.findOne({where:{user_name: username}})
+            if(! senderUser) throw new NotFoundException("UPDATE CONTRACT SENDER USER inbox.service.ts: user not found")
+            
+                const lastCreatedContract = senderUser.created_contract.at(-1) ?? {}
+                const updateCreatedContract = senderUser.created_contract.map(item => 
+                item.id === lastCreatedContract.id
+                ? condtractDecision
+                : item
+                )
+                senderUser.created_contract = updateCreatedContract
+
+                return await this.userRepository.save(senderUser)
+         }
 
     
     private createContractToken(
@@ -119,50 +160,92 @@ export class ContractService {
                 gatewayResponse: response.data,
             };
     }
-    
-    async receiverFinalAgreement(
-        contractId: string,
-        receiverId: string,
-        participants: number,
-        decision: Decision,
-    ) {
+async receiverFinalAgreement(
+    contractId: string,
+    receiverId: string,
+    participants: number,
+    decision: Decision,
+) {
+    const contract = await this.contractRepository.findOne({ where: { id: contractId } });
+    if (!contract) throw new NotFoundException(`{ receiver final agreement } Contract not found`);
 
-        // expression to set object
-        if (!this.contractDecisions.has(contractId)) {
-
-            this.contractDecisions.set(contractId, {
-                participants,
-                decisions: new Map(),
-            });
-
-        }
-
-        const contract = this.contractDecisions.get(contractId)!;
-        contract.decisions.set(receiverId, decision);
-
-        if (contract.decisions.size < participants - 1) {
-            return;
-        }
-        const hasDeclined = [...contract.decisions.values()]
-            .includes("declined");
-
-        if (hasDeclined) {
-
-            console.log("Contract rejected.");
-
-            // cleanup to offload memory
-            this.contractDecisions.delete(contractId);
-
-            return;
-
-        }
-
-        console.log("All receivers accepted.");
-
-        await this.sendToContractServer(contractId);
-        this.contractDecisions.delete(contractId);
-  
+    // Initialize the tracking object for this contract if it doesn't exist
+    if (!this.contractDecisions.has(contractId)) {
+        this.contractDecisions.set(contractId, {
+            participants,
+            decisions: new Map(),
+        });
     }
+
+    const contractsFromReceivers = this.contractDecisions.get(contractId)!;
+    // update on object key value
+    contractsFromReceivers.decisions.set(receiverId, decision);
+
+    if (decision === "declined") {
+        contract.contract_status = CONTRACT_STATUS.DECLINED;
+        await this.contractRepository.save(contract);
+        console.log("Contract rejected immediately by a receiver.");
+
+
+        this.contractDecisions.delete(contractId);
+        return;
+    }
+
+    if (contractsFromReceivers.decisions.size < participants - 1) {
+        return;
+    }
+
+    console.log("All receivers accepted.");
+
+   contract.receiver = Array.from(contractsFromReceivers.decisions.keys());
+   console.log('All receivers id', contract.receiver)
+    
+    contract.contract_status = CONTRACT_STATUS.ACCEPTED;
+    await this.contractRepository.save(contract);
+
+    /// temp card for all partecipants ///
+
+    const senderAccount = await this.accountModel.findById(contract.sender).exec();
+    const accNumber = Math.floor(Math.random() * 90000000 ) + 10000000;
+    const tempExpiry = this.createTempExpiry(this.parseTimeAgreement(contract.time_agreement)[1]);
+
+    if (senderAccount) {
+        const senderUser = await this.userRepository.findOne({ where: { id: String(senderAccount.customer) } });
+        const fullName = senderUser ? `${senderUser.name} ${senderUser.surname}` : senderAccount.fullName;
+        const accountUsers = [contract.sender, ...contract.receiver];
+        const expiryTime = Array.isArray(contract.time_agreement)
+            ? String(contract.time_agreement[1])
+            : this.parseTimeAgreement(contract.time_agreement)[1] ?? '';
+
+        const tempCard = await this.virtualCardService.createTempCard(
+            fullName,
+            expiryTime, 
+            contract.sender, 
+            accNumber, 
+            accountUsers, 
+            tempExpiry
+        );
+
+        const idAccountUsers = tempCard.account_users ?? []
+        console.log('temp card process account ids', {})
+
+        for( const accountId of idAccountUsers ){
+
+            await this.accountModel.findByIdAndUpdate(
+                  accountId,
+                {
+                    $push: { tempVirtualCard: tempCard.id },
+                    $set: { expiry: tempExpiry },
+                },
+            ).exec();
+        }                    
+    }
+    await this.updateSenderCreatedContract(contract.all_usernames[0],contract)             
+    await this.sendToContractServer(contractId);
+    
+    // Cleanup memory
+    this.contractDecisions.delete(contractId);
+}
 
 
     async getContract(id: string): Promise<Contract> {
@@ -195,6 +278,8 @@ export class ContractService {
     
 
         const contractPayload = this.contractRepository.create({
+            id:contract.id,
+            participants:contract.participants,
             sender: senderUser.user_name,
             sender_percentage: contract.sender_percentage,
             sender_amount: contract.sender_amount,
@@ -220,95 +305,66 @@ export class ContractService {
 
 
 
-    async sendContract( contract:Partial<contractProps>, registerDto:Partial<RegisterDto> ):Promise<string>{
+    async sendContract( contractId:string):Promise<string>{
 
-        
+        const contract = await this.contractRepository.findOne({where:{id:contractId}})
+        if( ! contract )throw new NotFoundException('{send contract} contract not found')
 
-        if (!contract.sender) throw new Error('[send contract] Contract sender is required');
+        if (!contract.sender) throw new Error('{send contract} Contract sender is required');
         const senderUser = await this.userRepository.findOne({where:{user_name:contract.sender}});
-        if( !senderUser ) throw new NotFoundException("error at send contract level 404: sender user not found")
+        if( !senderUser ) throw new NotFoundException("{ send contract } sender user not found")
 
         const senderAccount = await this.accountModel.findOne({ customer: senderUser.id }).exec();
-        if( !senderAccount ) throw new NotFoundException("error at send contract level 404: sender account not found")
+        if( !senderAccount ) throw new NotFoundException("{send contract} sender account not found")
         let senderAccountId = String(senderAccount._id);
+        contract.sender = senderAccountId;
 
 
-        if( !contract.time_agreement ) throw new NotFoundException('missing time agreement');
-        if( new Date(contract.time_agreement[0]) < new Date(Date.now())) throw new Error('invalid start time agreement');
-        if( new Date(contract.time_agreement[1]) <= new Date(Date.now())) throw new Error('invalid end time agreement');
+        if( !contract.time_agreement ) throw new NotFoundException('{send contract} missing time agreement');
+        if( new Date(contract.time_agreement[0]) < new Date(Date.now())) throw new Error('{send contract} invalid start time agreement');
+        if( new Date(contract.time_agreement[1]) <= new Date(Date.now())) throw new Error('{send contract} invalid end time agreement');
 
-        if ( !contract.receiver || contract.receiver.length === 0 ) { // create default account for then confirm it 
 
-            const randomFour = Math.floor(Math.random() * 90000) + 10000;
-            // const password = crypto.randomUUID();
+        const confirmedUsers: User[] = [];
+        const confirmedAccountIds: string[] = [];
+        if (!contract.receiver) throw new Error('{send contract} Contract receiver is required');
 
-            const defaultUser = await this.userService.createUser({
-                role: Role.USER,
-                name: 'DEFAULT',
-                surname: 'USER',
-                user_name: `default_user${randomFour}`,
-                mobile_number: registerDto.mobileNumber,
-                user_type: UserType.DEFAULT,
-                email: registerDto.email,
-                password: 'hashedpassword',
+        const existingReceivers = contract.receiver.filter(usernames => !usernames.includes( "NEW USER" ))
+        const newUsers = contract.receiver.filter(usernames => usernames.includes( "NEW USER" ))
+
+        try {
+            for (const username of existingReceivers ) {
+                
+                const receiverUser = await this.userRepository.findOne({ where: { user_name: username } });
+                if (!receiverUser) throw new NotFoundException(`error at send contract level 404: receiver user not found — ${username}`);
+                if (receiverUser.user_name === contract.sender ) throw new UnauthorizedException(`error at send contract level identical sender/user `)
+                const receiverAccount = await this.accountModel.findOne({ customer: receiverUser.id }).exec();
+                if (!receiverAccount) throw new NotFoundException(`error at send contract level 404: receiver account not found — ${username}`);
+                confirmedUsers.push(receiverUser);
+                confirmedAccountIds.push(String(receiverAccount._id));
+
             }
-        );
-
-            const savedDefaultUser = await this.userRepository.save(defaultUser);
-            contract.receiver = [savedDefaultUser.account];
-            
-            const contractCreated = await this.createContract(contract);
-
-            contractCreated.receiver_type = RECEIVER_TYPE.ONE_TIME;
-            await this.contractRepository.save(contractCreated)
-
-            // console.log('contract type',contractCreated.contract_type)
-            await this.inboxService.postInbox(contractCreated, savedDefaultUser);
-
-            const qrUrl = `http://localhost:3100/contract/receiver-inbox-contract?contractId=${contractCreated.id}&defaultUserId=${savedDefaultUser.id}`;
-            const qrCode = await QRCode.toDataURL(qrUrl);
-
-            // console.log('QR code generated for default user contract link:', qrUrl);
-            // console.log('QR code (base64):', qrCode);
-
-            return qrCode
-
-        } else { // already existing accounts 
-
-            const confirmedUsers: User[] = [];
-            const confirmedAccountIds: string[] = [];
-            if (!contract.receiver) throw new Error(' [send contract] Contract sender is required');
-
-            try {
-                for (const username of contract.receiver) {
-                  
-                    const receiverUser = await this.userRepository.findOne({ where: { user_name: username } });
-                    if (!receiverUser) throw new NotFoundException(`error at send contract level 404: receiver user not found — ${username}`);
-                    if (receiverUser.user_name === contract.sender ) throw new UnauthorizedException(`error at send contract level identical sender/user `)
-                    const receiverAccount = await this.accountModel.findOne({ customer: receiverUser.id }).exec();
-                    if (!receiverAccount) throw new NotFoundException(`error at send contract level 404: receiver account not found — ${username}`);
-                    confirmedUsers.push(receiverUser);
-                    confirmedAccountIds.push(String(receiverAccount._id));
-
-                }
-                const contractCreated = await this.createContract(contract);
-                contractCreated.sender = senderAccountId;
+                // contract.sender = senderAccountId;
             
                 for (const receiverUser of confirmedUsers) {
                     
-                    contractCreated.receiver =  confirmedAccountIds;
-                    await this.contractRepository.save(contractCreated);
+                    const allReceivers = [...confirmedAccountIds,...newUsers]
+                    contract.receiver = allReceivers
 
-                    await this.inboxService.postInbox(contractCreated, receiverUser);
+                    console.log('{send contract} all receiver array',allReceivers)
+
+                    await this.contractRepository.save(contract);
+
+
+                    await this.inboxService.postInbox(contract, receiverUser);
                    
                     if(senderUser.recipients.includes(receiverUser.user_name) 
                       || senderUser.user_name === receiverUser.user_name ||
                      receiverUser.user_name === null
-                    ){}else{
+                    ){}
+                    else{
                       senderUser.recipients.push(receiverUser.user_name);    
                     }
-                    senderUser.created_contract.push(contractCreated);
-
                     await this.userRepository.save(senderUser);
                 }
 
@@ -318,9 +374,79 @@ export class ContractService {
                 throw new HttpException('Custom error message', HttpStatus.BAD_REQUEST);
             }
 
-               return 'contract sent to receivers.'
-        }
+               return 'contract sent to receivers.'  
 
     }
 
+
+    async newAUserFromQRcode(
+        contractId:string,
+        decision:boolean,
+        amount?:number,
+        bank?:string,
+    ){
+
+        
+        const contract = await this.contractRepository.findOne({ where: { id:contractId } });
+        if (!contract) throw new NotFoundException(`{ new user QR code } Contract with id ${contractId} not found`);
+
+         const senderAccount = await this.accountModel.findById(contract.sender).exec();
+            if (! senderAccount ) throw new NotFoundException('{ new user qr code } Sender account not found');
+            const customerId = senderAccount.customer.toString();
+            const senderUser = await this.userRepository.findOne({ where: { id: customerId } });
+            if (! senderUser ) throw new NotFoundException('{ new user qr code } Sender user not found');
+
+        if (decision === true ){
+
+            const newUser = await this.userService.createUser({
+                        role:Role.USER,
+                        user_type:UserType.DEFAULT,
+                        name:'NEW',
+                        surname:'USER',
+                        mobile_number:'07401010101',
+                        user_name:'NEW USER',
+                        email:'newUser@transact.com',
+                        password:'hashedpassword',
+                        main_bank:bank
+                     }, amount  
+                    )
+            
+            await this.userRepository.save(newUser)
+
+    
+            this.receiverFinalAgreement(
+                contractId,
+                newUser.account,
+                contract.participants,
+                "accepted"
+            )
+
+            
+            await this.notificationService.createNotification(
+                senderUser.id,
+                `contract accepted by NEW USER`
+            );
+
+            return 'New user accepted the contract'
+
+        }else{
+
+        }
+
+        this.receiverFinalAgreement(
+            contractId,
+            "NEW USER",
+            contract.participants,
+            "accepted"
+        )
+
+     
+        await this.notificationService.createNotification(
+            senderUser.id,
+            `contract declined by NEW USER`
+        );
+
+         return 'New user declined the contract'
+           
+    }
 }

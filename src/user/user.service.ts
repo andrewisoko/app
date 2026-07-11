@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException,UnauthorizedException } from '@nestjs/common';
-import { User } from './entity/user.entity';
+import { User, UserType } from './entity/user.entity';
 import { InjectRepository} from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { InjectModel } from '@nestjs/mongoose';
@@ -8,6 +8,7 @@ import { Account, AccountDocument } from 'src/account/document/account.doc';
 import { Inbox } from 'src/inbox/entity/inbox.entity';
 import { AccountService } from 'src/account/account.service';
 import { VirtualCardService } from 'src/virtual_card/virtual.card.service';
+import { NotificationService } from 'src/notification/notification.service';
 import { VirtualCard } from 'src/virtual_card/entity/virtual.card.entity';
 import { RegisterDto } from './signUp.signIn/registerDto';
 import { use } from 'passport';
@@ -20,7 +21,8 @@ export class UserService {
         @InjectRepository(VirtualCard) private virtualCardRepository: Repository<VirtualCard>,
         @InjectModel('Account') private accountModel: Model<AccountDocument>,
         private readonly accountService:AccountService,
-        private readonly virtualCardService:VirtualCardService
+        private readonly virtualCardService:VirtualCardService,
+        private readonly notificationService:NotificationService
     ){}
 
 
@@ -60,7 +62,17 @@ export class UserService {
 
 
         savedUser.inbox = savedInbox;
-        return await this.userRepository.save(savedUser)
+        const finalUser = await this.userRepository.save(savedUser);
+
+        // Send notification to DEFAULT users
+        if (finalUser.user_type === UserType.DEFAULT) {
+            await this.notificationService.createNotification(
+                finalUser.id,
+                'Please complete your profile'
+            );
+        }
+
+        return finalUser;
     }
 
 

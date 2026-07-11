@@ -14,6 +14,7 @@ import { AccountSchema } from 'src/account/document/account.doc';
 import { AccountModule } from 'src/account/account.module';
 import { VirtualCard } from 'src/virtual_card/entity/virtual.card.entity';
 import { VirtualCardModule } from 'src/virtual_card/virtual.card.module';
+import { NotificationModule } from 'src/notification/notification.module';
 
 
 @Module({
@@ -22,6 +23,7 @@ import { VirtualCardModule } from 'src/virtual_card/virtual.card.module';
     MongooseModule.forFeature([{ name: 'Account', schema: AccountSchema }]),
     AccountModule,
     VirtualCardModule,
+    NotificationModule,
     PassportModule,
     JwtModule.registerAsync({
       useFactory: (configService: ConfigService) => ({

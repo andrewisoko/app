@@ -1,8 +1,8 @@
 import { Controller,Post,Get,Param,Body } from '@nestjs/common';
-import { ContractService, contractProps } from './contract.service';
-import { RegisterDto } from 'src/user/signUp.signIn/registerDto';
+import { ContractService,contractProps } from './contract.service';
 import { InboxService } from 'src/inbox/inbox.service';
 import { Contract } from './entity/contract.entity';
+
 
 
 @Controller('contract')
@@ -19,28 +19,39 @@ import { Contract } from './entity/contract.entity';
                 return this.contractService.getContract(id);
             }
         
-        // @Post('create-contract')
-        //     createContract(
-        //         @Body() contractData: Partial<contractProps>,
+        @Post('create-contract')
+            createContract(
+                @Body() contractData: Partial<contractProps>,
               
-        //     ): Promise<Contract> {
-        //         return this.contractService.createContract(
-        //             contractData,
+            ): Promise<Contract> {
+                return this.contractService.createContract(
+                    contractData,
 
-        //         );
-        //     }
-        
-        // @Post('send-contract')  
-        //     sendContract(
-        //         @Body() dataDto: contractProps & Partial<RegisterDto>
-        //     ): Promise<string> {
-        //         return this.contractService.sendContract(dataDto,dataDto)
-        //     }
-        
-        @Post('receiver-inbox-contract')
-            ContractReceivedOnInbox(
-                @Body() dataDto: { contractId: string, receiverId: string, accepted: boolean }
-            ){
-                return this.inboxService.ContractReceivedOnInbox(dataDto.contractId, dataDto.receiverId, dataDto.accepted)
+                );
             }
+        
+        @Post('send-contract')  
+            async sendContract(
+                @Body() contractId: string
+            ): Promise<string> {
+                return await this.contractService.sendContract( contractId )
+        }
+
+        @Post('qrcode-new-user')  
+            async newAUserFromQRcode(
+                @Body() dataDto: {
+                    contractId:string,
+                    decision: boolean,
+                    amount?:number,
+                    bank?:string,
+                }
+            ): Promise<string> {
+                return await this.contractService.newAUserFromQRcode(
+                    dataDto.contractId,
+                    dataDto.decision,
+                    dataDto.amount,
+                    dataDto.bank
+                )
+        }
+        
 }

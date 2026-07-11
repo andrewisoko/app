@@ -2,6 +2,7 @@ import { Entity,PrimaryGeneratedColumn, Column, OneToOne,JoinColumn,CreateDateCo
 import { OneToOne as TypeORMOneToOne } from "typeorm";
 import { Inbox } from "src/inbox/entity/inbox.entity";
 import { Contract } from "src/contract/entity/contract.entity";
+import { Notification } from "src/notification/entity/notification.entity";
 
 
 export enum Role {
@@ -9,13 +10,6 @@ export enum Role {
     ADMIN = "admin",
 }
 
-export enum MainBank {
-    LLOYDS = 'lloyds',
-    BARCLAYS = 'barclays',
-    NATWEST = 'natwest',
-    SANTANDER = 'santander',
-    NATIONWIDE = 'nationwide'
-}
 
 export enum UserType {
     DEFAULT = "default",
@@ -72,12 +66,17 @@ export class User {
         @JoinColumn()
         inbox: Inbox;
 
+    @OneToOne(() => Notification, notification => notification.user)
+        @JoinColumn()
+        notification: Notification;
+
+    
+
     @Column({
-        type:'enum',
-        enum:MainBank,
-        default:MainBank.BARCLAYS
+        default:'natwest'
     })
-        main_bank: MainBank
+        main_bank: string
+
     @CreateDateColumn({ name: 'created_at' })
         created_at: Date;
 
