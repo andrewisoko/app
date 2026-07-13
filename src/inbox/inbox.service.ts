@@ -158,24 +158,27 @@ export class InboxService {
          
                     await this.notificationService.createNotification(
                         senderUser.id,
-                        `contract accepted by ${receiverUser.user_name}`
+                        `contract accepted by ${receiverUser.user_name}`,
+                        receiverUser.user_name
                     );
                   
 
-            } 
-             else {
-            
-                this.contractService.receiverFinalAgreement(
-                    contract.id,
-                    receiverAccountId,
-                    contract.participants,
-                    "declined"
-                )
+                    } 
+                    else {
+                    
+                        this.contractService.receiverFinalAgreement(
+                            contract.id,
+                            receiverAccountId,
+                            contract.participants,
+                            "declined"
+                        )
 
          
                 await this.notificationService.createNotification(
                     senderUser.id,
-                    `contract declined by ${receiverUser.user_name}`
+                    `contract declined by ${receiverUser.user_name}`,
+                    receiverUser.user_name
+
                     );
                 }
             }

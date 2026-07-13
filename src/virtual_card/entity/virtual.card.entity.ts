@@ -5,7 +5,7 @@ import { Entity,PrimaryGeneratedColumn,Column,CreateDateColumn,UpdateDateColumn}
 export enum CARDTYPE {
 
         MAIN = 'main',
-        TEMP = 'temporary'
+        TEMP = 'temporary',
 }
 
 export type STATUS = |'active'| 'inactive' | 'expired'
@@ -54,6 +54,7 @@ export class VirtualCard {
         @Column({default:'active'})
                 status:STATUS
         
+
          @CreateDateColumn({ name: 'created_at' })
                 created_at: Date;
         

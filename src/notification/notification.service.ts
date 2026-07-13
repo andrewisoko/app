@@ -12,7 +12,7 @@ export class NotificationService {
         @InjectRepository(User) private readonly userRepository: Repository<User>,
     ) {}
 
-    async createNotification(userId: string, message: string): Promise<Notification> {
+    async createNotification(userId: string, message: string, from:string): Promise<Notification> {
         const user = await this.userRepository.findOne({ 
             where: { id: userId },
             relations: ['notification']
@@ -26,6 +26,7 @@ export class NotificationService {
         if (user.notification) {
             user.notification.message = message;
             user.notification.created_at = new Date();
+            user.notification.from = from
             return await this.notificationRepository.save(user.notification);
         }
 
@@ -33,6 +34,7 @@ export class NotificationService {
         const notification = this.notificationRepository.create({
             message,
             user,
+            from
         });
 
         return await this.notificationRepository.save(notification);

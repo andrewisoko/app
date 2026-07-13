@@ -17,6 +17,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { CONTRACT_DECISIONS } from './contract.service';
 import { ContractDecisionState } from './contract.service';
 import { VirtualCardService } from 'src/virtual_card/virtual.card.service';
+import { VirtualCard } from 'src/virtual_card/entity/virtual.card.entity';
 
 
 
@@ -29,7 +30,8 @@ import { VirtualCardService } from 'src/virtual_card/virtual.card.service';
       Contract,
       Transaction,
       User,
-      Inbox
+      Inbox,
+      VirtualCard
     ]),
     UserModule,
     InboxModule,

@@ -7,6 +7,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { AccountDocument } from 'src/account/document/account.doc';
 import { NotFoundException } from '@nestjs/common';
+import { VirtualCard } from 'src/virtual_card/entity/virtual.card.entity';
 
 @Injectable()
 export class TransactionService {
@@ -38,7 +39,9 @@ export class TransactionService {
       timestamp: data.timestamp
     });
 
+
     return this.transactionRepository.save(transaction);
+
   }
 
   async getTransaction(id:string){

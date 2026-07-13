@@ -1,5 +1,5 @@
 import { BadRequestException, HttpException, HttpStatus, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
-import { Contract, SPLIT_AGREEMENT, CONTRACT_STATUS, CONTRACT_TYPE } from './entity/contract.entity';
+import { Contract, SPLIT_AGREEMENT, CONTRACT_STATUS,  TRANSACTION_TYPE_CONTRACT, CONTRACT_TYPE } from './entity/contract.entity';
 import { Role, User } from 'src/user/entity/user.entity';
 import { UserService } from 'src/user/user.service';
 import { UserType } from 'src/user/entity/user.entity';
@@ -19,6 +19,7 @@ import { VirtualCardService } from 'src/virtual_card/virtual.card.service';
 
 
 
+
 type Decision = "accepted" | "declined";
 
 export interface ContractDecisionState { //object 1
@@ -30,7 +31,9 @@ export const CONTRACT_DECISIONS = "CONTRACT_DECISIONS";
 
 export interface contractProps{
     id:string
-    participants:number
+    participants:number,
+    contract_type:CONTRACT_TYPE,
+    transaction_type:TRANSACTION_TYPE_CONTRACT
     sender: string,
     receiver: string[],
     all_usernames: string[]
@@ -213,9 +216,11 @@ async receiverFinalAgreement(
         const senderUser = await this.userRepository.findOne({ where: { id: String(senderAccount.customer) } });
         const fullName = senderUser ? `${senderUser.name} ${senderUser.surname}` : senderAccount.fullName;
         const accountUsers = [contract.sender, ...contract.receiver];
-        const expiryTime = Array.isArray(contract.time_agreement)
+
+        const expiryTime = contract.transaction_type === TRANSACTION_TYPE_CONTRACT.WITH_TIME_AGREEMENT 
             ? String(contract.time_agreement[1])
-            : this.parseTimeAgreement(contract.time_agreement)[1] ?? '';
+            : new Date().toISOString()
+        
 
         const tempCard = await this.virtualCardService.createTempCard(
             fullName,
@@ -280,15 +285,17 @@ async receiverFinalAgreement(
         const contractPayload = this.contractRepository.create({
             id:contract.id,
             participants:contract.participants,
+            contract_type:contract.contract_type,
+            transaction_type:contract.transaction_type,
+            all_usernames: allUsernames,
             sender: senderUser.user_name,
             sender_percentage: contract.sender_percentage,
             sender_amount: contract.sender_amount,
             receiver: contract.receiver,
-            all_usernames: allUsernames,
-            time_agreement: contract.time_agreement,
             receiver_percentage: contract.receiver_percentage,
             receiver_amount: contract.receiver_amount,
             split_agreement: contract.split_agreement as SPLIT_AGREEMENT,
+            time_agreement: contract.time_agreement,
             contract_status: contract.contractStatus as CONTRACT_STATUS,
             repayment_agreement: contract.repayment_agreement,
             event_agreement: contract.event_agreement,
@@ -307,6 +314,7 @@ async receiverFinalAgreement(
 
     async sendContract( contractId:string):Promise<string>{
 
+
         const contract = await this.contractRepository.findOne({where:{id:contractId}})
         if( ! contract )throw new NotFoundException('{send contract} contract not found')
 
@@ -314,15 +322,13 @@ async receiverFinalAgreement(
         const senderUser = await this.userRepository.findOne({where:{user_name:contract.sender}});
         if( !senderUser ) throw new NotFoundException("{ send contract } sender user not found")
 
+        if(senderUser.user_type !== UserType.COMPETED) throw new UnauthorizedException("{ send contract} user needs to complete profile")
+
         const senderAccount = await this.accountModel.findOne({ customer: senderUser.id }).exec();
         if( !senderAccount ) throw new NotFoundException("{send contract} sender account not found")
         let senderAccountId = String(senderAccount._id);
         contract.sender = senderAccountId;
 
-
-        if( !contract.time_agreement ) throw new NotFoundException('{send contract} missing time agreement');
-        if( new Date(contract.time_agreement[0]) < new Date(Date.now())) throw new Error('{send contract} invalid start time agreement');
-        if( new Date(contract.time_agreement[1]) <= new Date(Date.now())) throw new Error('{send contract} invalid end time agreement');
 
 
         const confirmedUsers: User[] = [];
@@ -424,7 +430,8 @@ async receiverFinalAgreement(
             
             await this.notificationService.createNotification(
                 senderUser.id,
-                `contract accepted by NEW USER`
+                `contract accepted by NEW USER`,
+                'NEW USER'
             );
 
             return 'New user accepted the contract'
@@ -443,7 +450,8 @@ async receiverFinalAgreement(
      
         await this.notificationService.createNotification(
             senderUser.id,
-            `contract declined by NEW USER`
+            `contract declined by NEW USER`,
+            'NEW USER'
         );
 
          return 'New user declined the contract'

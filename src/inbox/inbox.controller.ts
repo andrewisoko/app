@@ -18,11 +18,6 @@ export class InboxController {
         )
     };
 
-    // @Get('received-contracts')
-    //     getReceivedContracts(@Query('inboxId') inboxId: string) {
-    //         return this.inboxService.getReceivedContracts(inboxId);
-    //     }
-
 
     @Get(':id')
         getInbox(@Param('id') id: string) {

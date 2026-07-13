@@ -10,18 +10,26 @@ import { AccountService } from 'src/account/account.service';
 import { VirtualCardService } from 'src/virtual_card/virtual.card.service';
 import { NotificationService } from 'src/notification/notification.service';
 import { VirtualCard } from 'src/virtual_card/entity/virtual.card.entity';
-import { RegisterDto } from './signUp.signIn/registerDto';
-import { use } from 'passport';
+
+
+export interface UpdateDefault {
+    userId:string,
+    user_type: UserType,
+    name:string,
+    surname:string,
+    mobile_number:string,
+    user_name:string,
+    email:string,
+    password:string,
+}
 
 @Injectable()
 export class UserService {
     constructor(
         @InjectRepository(User) private userRepository: Repository<User>,
         @InjectRepository(Inbox) private inboxRepository: Repository<Inbox>,
-        @InjectRepository(VirtualCard) private virtualCardRepository: Repository<VirtualCard>,
         @InjectModel('Account') private accountModel: Model<AccountDocument>,
         private readonly accountService:AccountService,
-        private readonly virtualCardService:VirtualCardService,
         private readonly notificationService:NotificationService
     ){}
 
@@ -68,7 +76,8 @@ export class UserService {
         if (finalUser.user_type === UserType.DEFAULT) {
             await this.notificationService.createNotification(
                 finalUser.id,
-                'Please complete your profile'
+                'Please complete your profile',
+                "Transact Inc"
             );
         }
 
@@ -133,6 +142,27 @@ export class UserService {
         await this.userRepository.save(user);
         
         return `Recipient ${recipientUsername} removed successfully`;
+    }
+
+    async updateDefautUser( details: UpdateDefault){
+
+         const user = await this.findUserById( details.userId);
+        if (!user) throw new NotFoundException('[update user] User not found');
+
+        if(user.user_type === UserType.DEFAULT){
+
+            user.user_type = details.user_type,
+            user.name = details.name,
+            user.surname = details.surname,
+            user.mobile_number = details.mobile_number,
+            user.user_name = details.user_name,
+            user.email = details.email,
+            user.password = details.password
+
+            await this.userRepository.save(user)
+            return 'user now completed and details saved.'
+        }
+
     }
 }
 

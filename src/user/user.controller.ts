@@ -11,6 +11,7 @@ import { RegisterDto } from './signUp.signIn/registerDto';
 import * as bcrypt from 'bcrypt';
 import { SignUpSignInService } from './signUp.signIn/signup.signin.service';
 import { LoginDto } from './signUp.signIn/loginDto';
+import type { UpdateDefault } from './user.service';
 
 @Controller('user')
 export class UserController {
@@ -32,7 +33,7 @@ export class UserController {
                 
                 const hashedpassword = await bcrypt.hash( registerDto.password,10 );
                 const randomFour = Math.floor(Math.random() * 90000) + 10000;
-                const userName = registerDto.name.slice( 0,3 ) + registerDto.surname + randomFour.toString();
+                const userName = '@' + registerDto.name.slice( 0,3 ) + registerDto.surname + randomFour.toString();
 
                 const mobileNumber = registerDto.mobile_number ?? registerDto.mobileNumber;
 
@@ -49,11 +50,11 @@ export class UserController {
                 )
             }
 
-        @Post('login')
-            async login(@Body() dto: LoginDto) {
-            const user = await this.signUpSignInService.validateUser(dto.email, dto.password);
-            return this.signUpSignInService.login(user);
-            }
+    @Post('login')
+        async login(@Body() dto: LoginDto) {
+        const user = await this.signUpSignInService.validateUser(dto.email, dto.password);
+        return this.signUpSignInService.login(user);
+        }
     
     @UseGuards(JwtAuthGuard,RolesGuard)
     @Roles(Role.ADMIN,Role.USER) 
@@ -120,7 +121,29 @@ export class UserController {
         findUserByUsername(@Param('username') username:string):Promise<User|null>{
             return this.userService.findUserByUsername(username)
         }
-    
+
+    @UseGuards(JwtAuthGuard,RolesGuard)
+    @Roles(Role.ADMIN,Role.USER)
+    @Post('update default')
+        async updateDefaultUser(
+            @Body() details:UpdateDefault
+        ){
+            const hashedpassword = await bcrypt.hash( details.password,10 );
+            const randomFour = Math.floor(Math.random() * 90000) + 10000;
+             const userName = '@' + details.name.slice( 0,3 ) + details.surname + randomFour.toString();
+
+             return await this.updateDefaultUser({
+                userId: details.userId,
+                user_type : UserType.COMPETED,
+                name : details.name,
+                surname : details.surname,
+                mobile_number : details.mobile_number,
+                user_name : userName,
+                email : details.email,
+                password : hashedpassword,
+
+             })
+        }
         
     @UseGuards(JwtAuthGuard,RolesGuard)
     @Roles(Role.ADMIN,Role.USER) 

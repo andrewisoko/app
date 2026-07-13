@@ -21,6 +21,12 @@ export enum CONTRACT_TYPE {
     EXISTING_USERS = "existing-user"
 }
 
+export enum TRANSACTION_TYPE_CONTRACT {
+    ONE_TIME = "one-time",
+    WITH_TIME_AGREEMENT = "with-time-agreement"
+}
+
+
 @Entity('contract')
 export class Contract {
 
@@ -31,37 +37,43 @@ export class Contract {
         participants:number;
 
     @Column({ type: 'enum', enum: CONTRACT_TYPE, default:CONTRACT_TYPE.EXISTING_USERS })
-        contract_type   :CONTRACT_TYPE;
+        contract_type:CONTRACT_TYPE;
+    
+    @Column({ type:'enum',enum: TRANSACTION_TYPE_CONTRACT, default:TRANSACTION_TYPE_CONTRACT.ONE_TIME})
+        transaction_type:TRANSACTION_TYPE_CONTRACT
 
     @Column({ type: 'varchar' })
         sender: string;
-
+    
     @Column({ type: 'simple-array' })
-        receiver: string[];
-
+    receiver: string[];
+    
     @Column({ type: 'simple-array' })
         all_usernames: string[];
 
-    @Column({ type: 'enum', enum: SPLIT_AGREEMENT, default: SPLIT_AGREEMENT.AMOUNT })
-        split_agreement: SPLIT_AGREEMENT;
-
+        
     @Column({ type: 'enum', enum: CONTRACT_STATUS, default: CONTRACT_STATUS.PENDING })
         contract_status: CONTRACT_STATUS;
         
-    @Column('varchar', { default: ["2026-04-18T12:00:00Z", "2026-04-18T15:00:00Z" ] })
-        time_agreement: Date[]
-
+        
     @Column({ type: 'numeric', nullable:true })
         sender_percentage: number;
-
-    @Column({ type: 'simple-array', default: [] })
-        receiver_percentage: number[];
-
+        
     @Column({ type: 'numeric', nullable:true })
-        sender_amount: number;
-
+    sender_amount: number;
+    
+    @Column({ type: 'simple-array', default: [] })
+         receiver_percentage: number[];
+    
     @Column({ type: 'simple-array', default: [] })
         receiver_amount: number[];
+
+
+    @Column({ type: 'enum', enum: SPLIT_AGREEMENT, default: SPLIT_AGREEMENT.AMOUNT })
+        split_agreement: SPLIT_AGREEMENT;
+    
+    @Column('varchar', { nullable:true })
+        time_agreement: Date[]
 
     @Column({ type: 'varchar', nullable: true })
         repayment_agreement: string;
@@ -75,8 +87,6 @@ export class Contract {
     @OneToMany(() => Transaction, transaction => transaction.contract)
         transactions: Transaction[];
 
-    // @OneToOne(() => Inbox, inbox => inbox.contract)
-    //     inbox: Inbox;
 
     @CreateDateColumn({ name: 'created_at' })
         created_at: Date;
