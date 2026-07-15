@@ -7,6 +7,9 @@ import { Contract } from 'src/contract/entity/contract.entity';
 import { Transaction } from './entity/transaction.entity';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AccountSchema } from 'src/account/document/account.doc';
+import { ConfigService,ConfigModule } from '@nestjs/config';
+import { VirtualCard } from 'src/virtual_card/entity/virtual.card.entity';
+import { JwtModule } from '@nestjs/jwt';
 
 @Module({
   imports:[
@@ -15,10 +18,18 @@ import { AccountSchema } from 'src/account/document/account.doc';
         Contract,
         User,
         Transaction,
+        VirtualCard
 
-      ])
+      ]),
+       JwtModule.registerAsync({
+          imports:[ConfigModule],
+          inject:[ConfigService],
+        })
     ],
-  providers: [TransactionService],
+  providers: [
+    TransactionService,
+    ConfigService
+  ],
   controllers: [TransactionController]
 })
 export class TransactionModule {}

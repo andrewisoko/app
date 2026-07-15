@@ -33,8 +33,7 @@ export class TransactionController {
         currency: string;
         merchant: string;
         timestamp: string;
-        trxId:string
-
+        trxId:string,
     }) {
          console.log('RAW PAYLOAD:', data);
         if (!data.key || !data.key.startsWith('KEY_')) {
@@ -42,7 +41,7 @@ export class TransactionController {
         }
 
         await this.transactionService.createTransactionFromNotification({
-           
+            key:data.key,
             trxId: data.trxId,
             amount: data.amount,
             status: data.status,

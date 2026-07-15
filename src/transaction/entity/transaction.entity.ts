@@ -25,7 +25,8 @@ export class Transaction {
     
     @Column('varchar', { length:3, default:"GBP" })
         currency:string;
-
+  
+        
     @ManyToOne(() => Contract, contract => contract.transactions,  {
         nullable: true })
     @JoinColumn({ name: 'contract_id',})
