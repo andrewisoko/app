@@ -13,7 +13,7 @@ import { VirtualCard } from 'src/virtual_card/entity/virtual.card.entity';
 
 
 export interface UpdateDefault {
-    userId:string,
+
     user_type: UserType,
     name:string,
     surname:string,
@@ -144,9 +144,9 @@ export class UserService {
         return `Recipient ${recipientUsername} removed successfully`;
     }
 
-    async updateDefautUser( details: UpdateDefault){
+    async updateDefautUser(id:string , details: UpdateDefault){
 
-         const user = await this.findUserById( details.userId);
+         const user = await this.findUserById( id );
         if (!user) throw new NotFoundException('[update user] User not found');
 
         if(user.user_type === UserType.DEFAULT){

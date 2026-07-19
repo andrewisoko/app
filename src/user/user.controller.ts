@@ -1,4 +1,4 @@
-import { Controller,Get,Param,Delete,Request,Post,Body } from '@nestjs/common';
+import { Controller,Get,Param,Delete,Request,Post,Body, Patch } from '@nestjs/common';
 import { UserService } from './user.service';
 import { User, UserType } from './entity/user.entity';
 import { UnauthorizedException } from '@nestjs/common';
@@ -124,16 +124,19 @@ export class UserController {
 
     @UseGuards(JwtAuthGuard,RolesGuard)
     @Roles(Role.ADMIN,Role.USER)
-    @Post('update default')
+    @Patch('/update-default/:id')
         async updateDefaultUser(
+            @Param() id:string,
             @Body() details:UpdateDefault
         ){
+
             const hashedpassword = await bcrypt.hash( details.password,10 );
             const randomFour = Math.floor(Math.random() * 90000) + 10000;
-             const userName = '@' + details.name.slice( 0,3 ) + details.surname + randomFour.toString();
+            const userName = '@' + details.name.slice( 0,3 ) + details.surname + randomFour.toString();
 
-             return await this.updateDefaultUser({
-                userId: details.userId,
+             return await this.updateDefaultUser(
+                id,
+                {
                 user_type : UserType.COMPETED,
                 name : details.name,
                 surname : details.surname,

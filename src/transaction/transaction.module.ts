@@ -24,6 +24,9 @@ import { JwtModule } from '@nestjs/jwt';
        JwtModule.registerAsync({
           imports:[ConfigModule],
           inject:[ConfigService],
+          useFactory:(configService:ConfigService) => ({
+            secret: configService.get<string>('JWT_CARD_KEY'),
+          })
         })
     ],
   providers: [

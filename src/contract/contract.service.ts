@@ -1,4 +1,4 @@
-import { BadRequestException, HttpException, HttpStatus, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, HttpException, HttpStatus, Injectable, NotFoundException, UnauthorizedException, Inject, forwardRef } from '@nestjs/common';
 import { Contract, SPLIT_AGREEMENT, CONTRACT_STATUS,  TRANSACTION_TYPE_CONTRACT, CONTRACT_TYPE } from './entity/contract.entity';
 import { Role, User } from 'src/user/entity/user.entity';
 import { UserService } from 'src/user/user.service';
@@ -14,8 +14,8 @@ import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
 import { JwtService } from '@nestjs/jwt';
 import { HttpService } from '@nestjs/axios';
-import { Inject } from '@nestjs/common';
 import { VirtualCardService } from 'src/virtual_card/virtual.card.service';
+import { SignUpSignInService } from 'src/user/signUp.signIn/signup.signin.service';
 
 
 
@@ -62,9 +62,11 @@ export class ContractService {
         private readonly httpService:HttpService,
         private readonly configService:ConfigService,
         private readonly userService: UserService,
+        @Inject(forwardRef(() => InboxService))
         private readonly inboxService: InboxService,
         private readonly notificationService: NotificationService,
-        private readonly virtualCardService: VirtualCardService
+        private readonly virtualCardService: VirtualCardService,
+        private readonly signIn: SignUpSignInService
         
     ){}
 
@@ -404,14 +406,16 @@ async receiverFinalAgreement(
 
         if (decision === true ){
 
+            const randomFour = Math.floor(Math.random() * 90000 ) + 10000
+
             const newUser = await this.userService.createUser({
                         role:Role.USER,
                         user_type:UserType.DEFAULT,
                         name:'NEW',
                         surname:'USER',
                         mobile_number:'07401010101',
-                        user_name:'NEW USER',
-                        email:'newUser@transact.com',
+                        user_name:`NEW_USER${randomFour}`,
+                        email:`newUser${randomFour}@transact.com`,
                         password:'hashedpassword',
                         main_bank:bank
                      }, amount  
@@ -434,7 +438,7 @@ async receiverFinalAgreement(
                 'NEW USER'
             );
 
-            return 'New user accepted the contract'
+            return this.signIn.login(newUser)
 
         }else{
 

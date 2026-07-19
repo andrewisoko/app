@@ -3,6 +3,8 @@ import {
     Injectable,
     NotFoundException,
     UnauthorizedException,
+    Inject,
+    forwardRef,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -11,7 +13,7 @@ import { Model } from 'mongoose';
 import { Inbox } from './entity/inbox.entity';
 import { User } from 'src/user/entity/user.entity';
 import { Contract} from 'src/contract/entity/contract.entity';
-import { JwtService } from '@nestjs/jwt';
+
 import { AccountDocument } from 'src/account/document/account.doc';
 import { VirtualCard } from 'src/virtual_card/entity/virtual.card.entity';
 import { ContractService } from 'src/contract/contract.service';
@@ -27,7 +29,7 @@ export class InboxService {
         @InjectRepository( Contract ) private readonly contractRepository: Repository<Contract>,
         @InjectRepository( VirtualCard ) private readonly vcRepository: Repository<VirtualCard>,
         @InjectModel('Account') private readonly accountModel: Model<AccountDocument>,
-        private readonly jwtService: JwtService,
+        @Inject(forwardRef(() => ContractService))
         private readonly contractService: ContractService,
         private readonly notificationService: NotificationService
     ) {}

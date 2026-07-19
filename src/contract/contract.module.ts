@@ -18,6 +18,7 @@ import { CONTRACT_DECISIONS } from './contract.service';
 import { ContractDecisionState } from './contract.service';
 import { VirtualCardService } from 'src/virtual_card/virtual.card.service';
 import { VirtualCard } from 'src/virtual_card/entity/virtual.card.entity';
+import { SignUpSignInService } from 'src/user/signUp.signIn/signup.signin.service';
 
 
 
@@ -43,10 +44,12 @@ import { VirtualCard } from 'src/virtual_card/entity/virtual.card.entity';
     ContractService,
     ConfigService,
     VirtualCardService,
+    SignUpSignInService,
        {
       provide: CONTRACT_DECISIONS,
       useValue: new Map<string, ContractDecisionState>(),
     },
-  ]
+  ],
+    exports: [ContractService], 
 })
 export class ContractModule {}

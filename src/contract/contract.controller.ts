@@ -45,7 +45,7 @@ import { Contract } from './entity/contract.entity';
                     amount?:number,
                     bank?:string,
                 }
-            ): Promise<string> {
+            ){
                 return await this.contractService.newAUserFromQRcode(
                     dataDto.contractId,
                     dataDto.decision,

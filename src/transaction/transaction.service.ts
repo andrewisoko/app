@@ -20,6 +20,7 @@ export class TransactionService {
   constructor(
     @InjectRepository(Transaction)
     private readonly transactionRepository: Repository<Transaction>,
+    @InjectRepository(VirtualCard)
     private readonly virtualCardRepository: Repository<VirtualCard>,
     @InjectModel("Account")
     private readonly accountModel:Model<AccountDocument>,
